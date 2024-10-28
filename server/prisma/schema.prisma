@@ -141,6 +141,7 @@ model Notification {
   createdAt  DateTime         @default(now())
   provider   ServiceProvider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
   user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+=======
 }
 
 enum UserRole {
