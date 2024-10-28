@@ -31,8 +31,7 @@ model ServiceProvider {
   email         String         @unique @db.VarChar(255)
   password      String         @db.VarChar(255)
   username      String         @unique @db.VarChar(50)
-  certification Bytes?
-  identityCard  Bytes?
+  certification String         @db.VarChar(255)
   photoUrl      String?        @db.VarChar(1024)
   address       String?        @db.VarChar(255)
   phoneNumber   String?        @db.VarChar(15)
@@ -141,7 +140,6 @@ model Notification {
   createdAt  DateTime         @default(now())
   provider   ServiceProvider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
   user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-=======
 }
 
 enum UserRole {
