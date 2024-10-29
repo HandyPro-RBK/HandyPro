@@ -59,22 +59,21 @@ const createNewUser = async (req, res) => {
         password: hashedPassword,
         address,
         phoneNumber,
-        photoUrl: photoUrl || "", 
-        userType: "CUSTOMER", 
+        photoUrl: photoUrl || "",
+        userType: "CUSTOMER",
       },
     });
 
     // Generate a JWT token for authentication
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, userType: newUser.userType },
-      "your_secret_key", 
-      { expiresIn: "7h" } 
+      "your_secret_key",
+      { expiresIn: "7h" }
     );
 
     res.status(201).send({ user: newUser, token });
   } catch (err) {
     if (err.code === "P2002") {
-      
       return res.status(400).send("Username already in use");
     }
     console.error("Error creating user:", err);
@@ -100,10 +99,10 @@ const loginUser = async (req, res) => {
     if (!isPasswordValid)
       return res.status(400).send("Invalid email or password");
 
-    // Generate a JWT 
+    // Generate a JWT
     const token = jwt.sign(
       { id: user.id, email: user.email, userType: user.userType },
-      "your_secret_key", 
+      "your_secret_key",
       { expiresIn: "7h" }
     );
 
