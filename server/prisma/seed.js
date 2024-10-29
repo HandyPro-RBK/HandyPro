@@ -127,7 +127,7 @@ async function main() {
       email: "default@provider.com",
       password: hashedPassword,
       username: "defaultprovider",
-      userType: "PROVIDER",
+      userType: "PROVIDER", // Ensure this matches the enum
       address: "123 Default Street",
       phoneNumber: "1234567890",
       photoUrl: "default.jpg",
@@ -144,11 +144,11 @@ async function main() {
       email: providerUser.email,
       password: hashedPassword,
       username: providerUser.username,
-      certification: "General Provider",
+      certification: null, // Adjust this based on your requirements
       photoUrl: providerUser.photoUrl,
       address: providerUser.address,
       phoneNumber: providerUser.phoneNumber,
-      age: 30,
+      age: "30", // Assuming age is stored as a string
       rating: 4.5,
       isAvailable: true,
     },
