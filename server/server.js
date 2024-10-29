@@ -1,7 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const userRouter = require("./routes/userRoutes");
-const serviceProviderRouter = require("./routes/serviceProviderRoutes"); // Import the service provider router
+const serviceRouter = require("./routes/serviceRoutes");
+const myCategoryRoutes = require("./routes/myCategoryRoutes");
+const myServiceRoutes = require("./routes/myServiceRoutes");
+
+const serviceProviderRouter = require("./routes/providerRoutes"); // Import the service provider router
 const { PrismaClient } = require("@prisma/client");
 const bodyParser = require("body-parser");
 
@@ -14,7 +18,13 @@ app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 require("dotenv").config();
 
 // Define routes
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use("/user", userRouter);
+app.use("/service", serviceRouter);
+app.use("/api/my-categories", myCategoryRoutes);
+app.use("/api/my-services", myServiceRoutes);
 app.use("/service-provider", serviceProviderRouter); // Add the service provider route
 
 const prisma = new PrismaClient();
