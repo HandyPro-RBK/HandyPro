@@ -1,17 +1,22 @@
+// routes/serviceRoutes.js
 const express = require("express");
-const {
-  createNewServiceProvider,
-  loginServiceProvider,
-  getProviderServices,
-  updateServiceProvider,
-} = require("../controllers/providerController");
-
 const router = express.Router();
+const authorizeProvider = require("../middleware/authorizeProvider");
+const {
+  createService,
+  updateService,
+  deleteService,
+  getServicesByProvider,
+  getCategories,
+} = require("../controllers/serviceController");
 
-// Route to register a new service provider
-router.post("/create", createNewServiceProvider);
+// Public routes
+router.get("/categories", getCategories);
+router.get("/provider/:providerId", getServicesByProvider);
 
-// Route to log in an existing service provider
-router.post("/login", loginServiceProvider);
+// Protected routes
+router.post("/create", authorizeProvider, createService);
+router.put("/update/:serviceId", authorizeProvider, updateService);
+router.delete("/delete/:serviceId", authorizeProvider, deleteService);
 
 module.exports = router;

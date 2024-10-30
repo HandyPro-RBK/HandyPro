@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const userRouter = require("./routes/userRoutes");
-const serviceProviderRouter = require("./routes/serviceProviderRoutes"); // Import the service provider router
+const serviceProviderRouter = require("./routes/providerRoutes"); // Import the service provider router
 const { PrismaClient } = require("@prisma/client");
 const bodyParser = require("body-parser");
 
