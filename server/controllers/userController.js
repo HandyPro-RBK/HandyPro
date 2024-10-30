@@ -1,3 +1,4 @@
+//
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -29,6 +30,19 @@ const validateLogin = (data) => {
   const schema = Joi.object({
     email: Joi.string().email().max(255).required(),
     password: Joi.string().max(255).required(),
+  });
+  return schema.validate(data);
+};
+
+// Validation schema for user update
+const validateUpdate = (data) => {
+  const schema = Joi.object({
+    username: Joi.string().min(4).max(50).optional(),
+    email: Joi.string().email().max(255).optional(),
+    password: Joi.string().min(10).max(255).optional(),
+    address: Joi.string().max(255).optional(),
+    phoneNumber: Joi.string().max(15).optional(),
+    photoUrl: Joi.string().max(1024).optional(),
   });
   return schema.validate(data);
 };
@@ -113,4 +127,62 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { createNewUser, loginUser };
+// Update user profile
+const updateUser = async (req, res) => {
+  try {
+    // Validate the request body
+    const { error } = validateUpdate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const userId = req.params.userId;
+    const updateData = { ...req.body };
+
+    // If password is being updated, hash it
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(updateData.password, salt);
+    }
+
+    // If email is being updated, check if it's already in use
+    if (updateData.email) {
+      const existingUser = await prisma.user.findUnique({
+        where: {
+          email: updateData.email,
+          NOT: {
+            id: parseInt(userId),
+          },
+        },
+      });
+      if (existingUser) return res.status(400).send("Email already in use");
+    }
+
+    // Update the user
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: updateData,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        address: true,
+        phoneNumber: true,
+        photoUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res.status(200).send(updatedUser);
+  } catch (err) {
+    if (err.code === "P2002") {
+      return res.status(400).send("Username already in use");
+    }
+    if (err.code === "P2025") {
+      return res.status(404).send("User not found");
+    }
+    console.error("Error updating user:", err);
+    res.status(500).send("Server error");
+  }
+};
+
+module.exports = { createNewUser, loginUser, updateUser };
