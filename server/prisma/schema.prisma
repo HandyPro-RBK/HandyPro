@@ -44,7 +44,7 @@ model ServiceProvider {
   photoUrl          String?           @db.VarChar(1024)
   address           String?           @db.VarChar(255)
   phoneNumber       String?           @db.VarChar(15)
-  age               Int?
+  age               String?
   rating            Decimal?          @default(0.0) @db.Decimal(3, 2)
   isAvailable       Boolean           @default(true)
   
@@ -67,6 +67,7 @@ model Service {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   isActive          Boolean           @default(true)
+image       String          @default("")
 
   provider          ServiceProvider   @relation(fields: [providerId], references: [id], onDelete: Cascade)
   category          Category          @relation(fields: [categoryId], references: [id])
@@ -108,9 +109,12 @@ model Review {
 
 model Category {
   id                Int               @id @default(autoincrement())
+  image       String          @default("")
+
   name              String            @unique @db.VarChar(50)
   description       String?           @db.Text
   services          Service[]
+  
 }
 
 
