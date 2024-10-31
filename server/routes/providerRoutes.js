@@ -14,7 +14,7 @@ const {
 router.post("/create", createNewServiceProvider);
 router.post("/login", loginServiceProvider);
 
-// // Protected routes
+// Protected routes
 // router.put("/update/:providerId", authorizeProvider, updateServiceProvider);
 // router.get("/profile/:providerId", authorizeProvider, getProviderProfile);
 // router.get("/services/:providerId", authorizeProvider, getProviderServices);
