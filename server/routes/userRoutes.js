@@ -6,6 +6,7 @@ const {
   loginUser,
   updateUser,
   getUserProfile,
+  deleteUser,
 } = require("../controllers/userController");
 
 // Public routes
