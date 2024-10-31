@@ -15,8 +15,8 @@ router.post("/create", createNewServiceProvider);
 router.post("/login", loginServiceProvider);
 
 // Protected routes
-router.put("/update/:providerId", authorizeProvider, updateServiceProvider);
-router.get("/profile/:providerId", authorizeProvider, getProviderProfile);
-router.get("/services/:providerId", authorizeProvider, getProviderServices);
+// router.put("/update/:providerId", authorizeProvider, updateServiceProvider);
+// router.get("/profile/:providerId", authorizeProvider, getProviderProfile);
+// router.get("/services/:providerId", authorizeProvider, getProviderServices);
 
 module.exports = router;
