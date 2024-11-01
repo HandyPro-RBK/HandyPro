@@ -13,9 +13,9 @@ const {
 router.post("/create", createNewUser);
 router.post("/login", loginUser);
 
-// Protected routes
-router.put("/update/:userId", authorizeUser, updateUser);
-router.get("/profile/:userId", authorizeUser, getUserProfile);
-router.delete("/delete/:userId", authorizeUser, deleteUser);
+// // Protected routes
+// router.put("/update/:userId", authorizeUser, updateUser);
+// router.get("/profile/:userId", authorizeUser, getUserProfile);
+// router.delete("/delete/:userId", authorizeUser, deleteUser);
 
 module.exports = router;

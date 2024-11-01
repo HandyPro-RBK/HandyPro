@@ -1,4 +1,3 @@
-// routes/serviceRoutes.js
 const express = require("express");
 const router = express.Router();
 const authorizeProvider = require("../middleware/authorizeProvider");
