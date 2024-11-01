@@ -1,17 +1,21 @@
 const express = require("express");
+const router = express.Router();
+const authorizeProvider = require("../middleware/authorizeProvider");
 const {
   createNewServiceProvider,
   loginServiceProvider,
-  getProviderServices,
   updateServiceProvider,
+  getProviderProfile,
+  getProviderServices,
 } = require("../controllers/providerController");
 
-const router = express.Router();
-
-// Route to register a new service provider
+// Public routes
 router.post("/create", createNewServiceProvider);
-
-// Route to log in an existing service provider
 router.post("/login", loginServiceProvider);
+
+// Protected routes
+// router.put("/update/:providerId", authorizeProvider, updateServiceProvider);
+// router.get("/profile/:providerId", authorizeProvider, getProviderProfile);
+// router.get("/services/:providerId", authorizeProvider, getProviderServices);
 
 module.exports = router;
