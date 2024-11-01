@@ -5,7 +5,6 @@ const Joi = require("joi");
 
 const prisma = new PrismaClient();
 
-// Validation schema for service provider registration
 const validateProviderRegistration = (data) => {
   const schema = Joi.object({
     username: Joi.string().min(4).max(50).required(),
@@ -27,7 +26,6 @@ const validateProviderRegistration = (data) => {
   return schema.validate(data);
 };
 
-// Validation schema for service provider login
 const validateProviderLogin = (data) => {
   const schema = Joi.object({
     email: Joi.string().email().max(255).required(),
@@ -36,10 +34,8 @@ const validateProviderLogin = (data) => {
   return schema.validate(data);
 };
 
-// Create a new service provider
 const createNewServiceProvider = async (req, res) => {
   try {
-    // Validate the request body
     const { error } = validateProviderRegistration(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -55,37 +51,21 @@ const createNewServiceProvider = async (req, res) => {
       age,
     } = req.body;
 
-    // Check if the email is already in use
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    // Check for existing provider
     const existingProvider = await prisma.serviceProvider.findUnique({
       where: { email },
     });
-    if (existingUser || existingProvider) {
+
+    if (existingProvider) {
       return res.status(400).send("Email already in use");
     }
 
-    // Hash the password
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        username,
-        address,
-        phoneNumber,
-        photoUrl: photoUrl || "",
-        userType: "CUSTOMER", // Set userType as per your requirements
-      },
-    });
-
-    // Create the service provider
+    // Create new provider
     const newProvider = await prisma.serviceProvider.create({
       data: {
-        userId: newUser.id, // Link to the newly created user
         username,
         email,
         password: hashedPassword,
@@ -95,63 +75,92 @@ const createNewServiceProvider = async (req, res) => {
         identityCard: identityCard ? Buffer.from(identityCard, "base64") : null,
         address,
         phoneNumber,
-        photoUrl: photoUrl || "",
+        photoUrl: photoUrl || null,
         age,
         isAvailable: true,
+        rating: 0.0,
       },
     });
 
-    // Generate a JWT token for authentication
     const token = jwt.sign(
       {
         id: newProvider.id,
         email: newProvider.email,
-        userType: "SERVICE_PROVIDER", // You can add userType for differentiating roles
+        type: "SERVICE_PROVIDER",
       },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
     );
 
-    res.status(201).send({ provider: newProvider, token });
+    // Remove  data before sending response
+    const providerResponse = {
+      ...newProvider,
+      password: undefined,
+      certification: undefined,
+      identityCard: undefined,
+    };
+
+    res.status(201).send({
+      provider: providerResponse,
+      token,
+    });
   } catch (err) {
     console.error("Error creating service provider:", err);
     res.status(500).send("Server error");
   }
 };
 
-// Login a service provider
 const loginServiceProvider = async (req, res) => {
   try {
-    // Validate the request body
     const { error } = validateProviderLogin(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const { email, password } = req.body;
 
-    // Find the service provider by email
     const provider = await prisma.serviceProvider.findUnique({
       where: { email },
     });
-    if (!provider) return res.status(400).send("Invalid email or password");
 
-    // Check the password
+    if (!provider) {
+      return res.status(400).send("Invalid email or password");
+    }
+
     const isPasswordValid = await bcrypt.compare(password, provider.password);
     if (!isPasswordValid) {
       return res.status(400).send("Invalid email or password");
     }
 
-    // Generate a JWT token for authentication
+    // Generate  token
     const token = jwt.sign(
-      { id: provider.id, email: provider.email },
+      {
+        id: provider.id,
+        email: provider.email,
+        type: "SERVICE_PROVIDER",
+      },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
     );
 
-    res.status(200).send({ token });
+    // Remove  data before sending response
+    const providerResponse = {
+      ...provider,
+      password: undefined,
+      certification: undefined,
+      identityCard: undefined,
+    };
+
+    res.status(200).send({
+      provider: providerResponse,
+      token,
+    });
   } catch (err) {
     console.error("Error logging in service provider:", err);
-    res.status(500).send(err);
+    res.status(500).send("Server error");
   }
 };
 
-module.exports = { createNewServiceProvider, loginServiceProvider };
+module.exports = {
+  createNewServiceProvider,
+  loginServiceProvider,
+};
+// this file its clear

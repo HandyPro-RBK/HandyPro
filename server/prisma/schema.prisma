@@ -111,6 +111,7 @@ model Category {
   description       String?           @db.Text
   services          Service[]
   
+  
 }
 
 
