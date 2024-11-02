@@ -33,6 +33,7 @@ model User {
 
 model ServiceProvider {
   id                Int               @id @default(autoincrement())
+  
   email             String            @unique @db.VarChar(255)
   password          String            @db.VarChar(255)
   username          String            @db.VarChar(50)
@@ -106,6 +107,7 @@ model Review {
 
 model Category {
   id                Int               @id @default(autoincrement())
+
   image             String            @default("")
   name              String            @unique @db.VarChar(50)
   description       String?           @db.Text
