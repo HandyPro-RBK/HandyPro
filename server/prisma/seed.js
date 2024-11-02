@@ -141,6 +141,9 @@
 //     update: {},
 //     create: {
 //       userId: providerUser.id,
+//     where: { email: providerUser.email },
+//     update: {},
+//     create: {
 //       email: providerUser.email,
 //       password: hashedPassword,
 //       username: providerUser.username,
@@ -163,6 +166,8 @@
 //       create: {
 //         name: category.name,
 //         description: `Services related to ${category.name}`,
+//         // Assume an image field exists in the Category model if needed
+//         image: category.image || "", // Include image if necessary
 //       },
 //     });
 //   }
@@ -175,6 +180,11 @@
 //   for (const service of services) {
 //     const category = categoryMap.get(service.category);
 //     if (!category) {
+//   const categoryMap = new Map(categories.map((cat) => [cat.name, cat.id])); // Map category names to IDs
+
+//   for (const service of services) {
+//     const categoryId = categoryMap.get(service.category);
+//     if (!categoryId) {
 //       console.error(`Category not found for service: ${service.title}`);
 //       continue;
 //     }
@@ -192,6 +202,8 @@
 //         image: service.image,
 //         categoryId: category.id,
 //         providerId: serviceProvider.id,
+//         categoryId: categoryId, // Use the ID from the map
+//         providerId: serviceProvider.id, // Relate the service to the provider
 //         isActive: true,
 //       },
 //     });

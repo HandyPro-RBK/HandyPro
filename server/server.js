@@ -5,7 +5,8 @@ const serviceRouter = require("./routes/serviceRoutes");
 const myCategoryRoutes = require("./routes/myCategoryRoutes");
 const myServiceRoutes = require("./routes/myServiceRoutes");
 const providerRoutes = require("./routes/bookingprovider");
-const serviceProviderRouter = require("./routes/providerRoutes"); // Import the service provider router
+
+const serviceProviderRouter = require("./routes/providerRoutes");
 const { PrismaClient } = require("@prisma/client");
 const bodyParser = require("body-parser");
 
