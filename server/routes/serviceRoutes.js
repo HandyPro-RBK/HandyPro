@@ -14,7 +14,7 @@ router.get("/categories", getCategories);
 router.get("/provider/:providerId", getServicesByProvider);
 
 // Protected routes
-// router.post("/create", authorizeProvider, createService);
+router.post("/create", createService);
 // router.put("/update/:serviceId", authorizeProvider, updateService);
 // router.delete("/delete/:serviceId", authorizeProvider, deleteService);
 
