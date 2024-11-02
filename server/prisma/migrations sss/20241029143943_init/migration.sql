@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('CUSTOMER', 'PROVIDER', 'ADMIN');
+CREATE TYPE "UserRole" AS ENUM ('CUSTOMER', 'ADMIN');
 
 -- CreateEnum
 CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'REJECTED');
@@ -16,7 +16,7 @@ CREATE TABLE "User" (
     "email" VARCHAR(255) NOT NULL,
     "password" VARCHAR(255) NOT NULL,
     "username" VARCHAR(50) NOT NULL,
-    "userType" "UserRole" NOT NULL,
+    "userType" "UserRole" NOT NULL DEFAULT 'CUSTOMER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "address" VARCHAR(255) NOT NULL,
@@ -100,15 +100,6 @@ CREATE TABLE "Category" (
 );
 
 -- CreateTable
-CREATE TABLE "Admin" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Admin_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Schedule" (
     "id" SERIAL NOT NULL,
     "providerId" INTEGER NOT NULL,
@@ -160,13 +151,7 @@ CREATE UNIQUE INDEX "ServiceProvider_userId_key" ON "ServiceProvider"("userId");
 CREATE UNIQUE INDEX "ServiceProvider_email_key" ON "ServiceProvider"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ServiceProvider_username_key" ON "ServiceProvider"("username");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Admin_userId_key" ON "Admin"("userId");
 
 -- AddForeignKey
 ALTER TABLE "ServiceProvider" ADD CONSTRAINT "ServiceProvider_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -194,9 +179,6 @@ ALTER TABLE "Review" ADD CONSTRAINT "Review_userId_fkey" FOREIGN KEY ("userId") 
 
 -- AddForeignKey
 ALTER TABLE "Review" ADD CONSTRAINT "Review_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "ServiceProvider"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Admin" ADD CONSTRAINT "Admin_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Schedule" ADD CONSTRAINT "Schedule_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "ServiceProvider"("id") ON DELETE CASCADE ON UPDATE CASCADE;

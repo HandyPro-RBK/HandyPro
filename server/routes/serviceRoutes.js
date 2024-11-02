@@ -1,9 +1,22 @@
-const express = require('express');
+// routes/serviceRoutes.js
+const express = require("express");
 const router = express.Router();
-const { createService, getServicesByProvider, getCategories } = require('../controllers/serviceController');
+const authorizeProvider = require("../middleware/authorizeProvider");
+const {
+  createService,
+  updateService,
+  deleteService,
+  getServicesByProvider,
+  getCategories,
+} = require("../controllers/serviceController");
 
-router.post('/create',createService);
-router.get('/provider/:providerId', getServicesByProvider);
-router.get('/categories', getCategories);
+// Public routes
+router.get("/categories", getCategories);
+router.get("/provider/:providerId", getServicesByProvider);
+
+// Protected routes
+router.post("/create", createService);
+// router.put("/update/:serviceId", authorizeProvider, updateService);
+// router.delete("/delete/:serviceId", authorizeProvider, deleteService);
 
 module.exports = router;
