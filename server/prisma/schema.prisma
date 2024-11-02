@@ -179,3 +179,4 @@ enum PaymentMethod {
   ONLINE
   CASH
 }
+// put prisma in gitignore
