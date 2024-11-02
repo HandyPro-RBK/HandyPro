@@ -4,7 +4,7 @@ const userRouter = require("./routes/userRoutes");
 const serviceRouter = require("./routes/serviceRoutes");
 const myCategoryRoutes = require("./routes/myCategoryRoutes");
 const myServiceRoutes = require("./routes/myServiceRoutes");
-
+const providerRoutes = require("./routes/bookingprovider");
 const serviceProviderRouter = require("./routes/providerRoutes"); // Import the service provider router
 const { PrismaClient } = require("@prisma/client");
 const bodyParser = require("body-parser");
@@ -26,7 +26,7 @@ app.use("/service", serviceRouter);
 app.use("/api/my-categories", myCategoryRoutes);
 app.use("/api/my-services", myServiceRoutes);
 app.use("/service-provider", serviceProviderRouter); // Add the service provider route
-
+app.use("/provider", providerRoutes);
 const prisma = new PrismaClient();
 
 const PORT = 3001;

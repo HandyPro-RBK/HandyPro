@@ -27,7 +27,7 @@ model User {
   phoneNumber       String            @db.VarChar(15)
   photoUrl          String            @db.VarChar(1024)
 
-  serviceProvider    ServiceProvider?
+  
   reviews           Review[]
   bookings          Booking[]
   notifications     Notification[]
@@ -35,7 +35,7 @@ model User {
 
 model ServiceProvider {
   id                Int               @id @default(autoincrement())
-  userId            Int               @unique
+  
    email             String            @unique @db.VarChar(255)
   password          String            @db.VarChar(255)
   username          String             @db.VarChar(50)
@@ -48,7 +48,7 @@ model ServiceProvider {
   rating            Decimal?          @default(0.0) @db.Decimal(3, 2)
   isAvailable       Boolean           @default(true)
   
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
   services          Service[]
   reviews           Review[]          @relation("ProviderReviews")
   bookings          Booking[]
