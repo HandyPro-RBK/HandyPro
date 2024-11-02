@@ -5,7 +5,7 @@ const {
   updateService,
 } = require("../controllers/myServiceController");
 
-router.get("/", fetchAllServices); // Fetch all services
-router.put("/:id", updateService); // Update a service by ID
+router.get("/", fetchAllServices); 
+router.put("/:id", updateService); 
 
 module.exports = router;

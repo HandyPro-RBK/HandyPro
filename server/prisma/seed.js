@@ -137,6 +137,10 @@
 //   // 2. Create service provider profile
 //   console.log("Creating service provider profile...");
 //   const serviceProvider = await prisma.serviceProvider.upsert({
+//     where: { userId: providerUser.id },
+//     update: {},
+//     create: {
+//       userId: providerUser.id,
 //     where: { email: providerUser.email },
 //     update: {},
 //     create: {
@@ -171,6 +175,11 @@
 //   // 4. Create services
 //   console.log("Creating services...");
 //   const categories = await prisma.category.findMany();
+//   const categoryMap = new Map(categories.map((cat) => [cat.name, cat]));
+
+//   for (const service of services) {
+//     const category = categoryMap.get(service.category);
+//     if (!category) {
 //   const categoryMap = new Map(categories.map((cat) => [cat.name, cat.id])); // Map category names to IDs
 
 //   for (const service of services) {
@@ -191,6 +200,8 @@
 //         price: 100.0,
 //         duration: 60,
 //         image: service.image,
+//         categoryId: category.id,
+//         providerId: serviceProvider.id,
 //         categoryId: categoryId, // Use the ID from the map
 //         providerId: serviceProvider.id, // Relate the service to the provider
 //         isActive: true,
