@@ -28,6 +28,7 @@ app.use("/api/my-categories", myCategoryRoutes);
 app.use("/api/my-services", myServiceRoutes);
 app.use("/service-provider", serviceProviderRouter); // Add the service provider route
 app.use("/provider", providerRoutes);
+// app.use("/posts", postDetailRoutes);
 const prisma = new PrismaClient();
 
 const PORT = 3001;
