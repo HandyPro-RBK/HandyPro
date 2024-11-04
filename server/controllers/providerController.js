@@ -159,8 +159,92 @@ const loginServiceProvider = async (req, res) => {
   }
 };
 
+// update and get
+const updateServiceProvider = async (req, res) => {
+  try {
+    const { id } = req.provider;
+    const updateData = {};
+
+    const allowedUpdates = [
+      "username",
+      "address",
+      "phoneNumber",
+      "photoUrl",
+      "age",
+      "isAvailable",
+    ];
+
+    allowedUpdates.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    const updatedProvider = await prisma.serviceProvider.update({
+      where: { id },
+      data: updateData,
+    });
+
+    const providerResponse = {
+      ...updatedProvider,
+      password: undefined,
+      certification: undefined,
+      identityCard: undefined,
+    };
+
+    res.status(200).json(providerResponse);
+  } catch (error) {
+    console.error("Error updating service provider:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+const getProviderProfile = async (req, res) => {
+  try {
+    const { id } = req.provider;
+
+    const provider = await prisma.serviceProvider.findUnique({
+      where: { id },
+    });
+
+    if (!provider) {
+      return res.status(404).send("Provider not found");
+    }
+
+    const providerResponse = {
+      ...provider,
+      password: undefined,
+      certification: undefined,
+      identityCard: undefined,
+    };
+
+    res.status(200).json(providerResponse);
+  } catch (error) {
+    console.error("Error fetching provider profile:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+const getProviderServices = async (req, res) => {
+  try {
+    const { id } = req.provider;
+
+    const services = await prisma.service.findMany({
+      where: { providerId: id },
+    });
+
+    res.status(200).json(services);
+  } catch (error) {
+    console.error("Error fetching provider services:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+// Add these to the exports
 module.exports = {
   createNewServiceProvider,
   loginServiceProvider,
+  updateServiceProvider,
+  getProviderProfile,
+  getProviderServices,
 };
-// this file its clear
