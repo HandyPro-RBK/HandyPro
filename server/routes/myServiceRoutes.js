@@ -2,12 +2,15 @@ const express = require("express");
 const router = express.Router();
 const {
   fetchAllServices,
-  updateService,
   fetchServiceDetails,
+  createBooking,
 } = require("../controllers/myServiceController");
 
+// Routes for services
 router.get("/", fetchAllServices); // Fetch all services
 router.get("/:id", fetchServiceDetails); // Fetch service details by ID
-router.put("/:id", updateService); // Update a service by ID
+
+// Route for creating a booking
+router.post("/bookings", createBooking); // Create a new booking
 
 module.exports = router;
