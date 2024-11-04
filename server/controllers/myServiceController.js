@@ -13,43 +13,6 @@ const fetchAllServices = async (req, res) => {
   }
 };
 
-const updateService = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      name,
-      description,
-      price,
-      duration,
-      categoryId,
-      providerId,
-      image,
-    } = req.body;
-
-    const updatedService = await prisma.service.update({
-      where: { id: parseInt(id) },
-      data: {
-        name,
-        description,
-        price: parseFloat(price),
-        duration: parseInt(duration),
-        categoryId: parseInt(categoryId),
-        providerId: parseInt(providerId),
-        image,
-      },
-    });
-
-    res.json({
-      success: true,
-      message: "Service updated successfully",
-      service: updatedService,
-    });
-  } catch (error) {
-    console.error("Error updating service:", error);
-    res.status(500).json({ error: "Failed to update service" });
-  }
-};
-
 // New function to fetch service details by ID
 const fetchServiceDetails = async (req, res) => {
   try {
@@ -127,6 +90,5 @@ const fetchServiceDetails = async (req, res) => {
 
 module.exports = {
   fetchAllServices,
-  updateService,
   fetchServiceDetails,
 };
