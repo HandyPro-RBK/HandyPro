@@ -87,11 +87,9 @@ const fetchServiceDetails = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { userId, serviceId, providerId, bookingDate, notes } = req.body;
-
-    const userExists = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+    const { serviceId, providerId, bookingDate, notes } = req.body;
+    // Get authenticated user's ID from req.user
+    const userId = req.user.id;
 
     const serviceExists = await prisma.service.findUnique({
       where: { id: serviceId },
@@ -100,10 +98,6 @@ const createBooking = async (req, res) => {
     const providerExists = await prisma.serviceProvider.findUnique({
       where: { id: providerId },
     });
-
-    if (!userExists) {
-      return res.status(400).json({ error: "User does not exist" });
-    }
 
     if (!serviceExists) {
       return res.status(400).json({ error: "Service does not exist" });
@@ -135,11 +129,18 @@ const createBooking = async (req, res) => {
         bookingDate,
         notes: notes || null,
         status: "PENDING",
-        totalPrice: 0, // Placeholder for total price
+        totalPrice: serviceExists.price || 0,
+      },
+      include: {
+        service: true,
+        provider: true,
       },
     });
 
-    res.status(201).json({ message: "Booking Request Sent", booking });
+    res.status(201).json({
+      message: "Booking Request Sent",
+      booking,
+    });
   } catch (error) {
     console.error("Error creating booking:", error);
     res.status(500).json({ error: "Failed to create booking" });

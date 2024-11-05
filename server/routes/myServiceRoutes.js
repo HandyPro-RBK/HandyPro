@@ -5,12 +5,13 @@ const {
   fetchServiceDetails,
   createBooking,
 } = require("../controllers/myServiceController");
+const authorizeUser = require("../middleware/authorizeUser");
 
-// Routes for services
-router.get("/", fetchAllServices); // Fetch all services
-router.get("/:id", fetchServiceDetails); // Fetch service details by ID
+// Public routes
+router.get("/", fetchAllServices);
+router.get("/:id", fetchServiceDetails);
 
-// Route for creating a booking
-router.post("/bookings", createBooking); // Create a new booking
+// Protected booking route
+router.post("/bookings", authorizeUser, createBooking);
 
 module.exports = router;
