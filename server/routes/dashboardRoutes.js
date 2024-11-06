@@ -7,8 +7,13 @@ const {
   getUserNotifications,
   markNotificationAsRead,
   getUnreadNotificationsCount,
+  getDashboardSummary,
 } = require("../controllers/dashboardController");
 
+// Dashboard summary
+router.get("/summary", authorizeUser, getDashboardSummary);
+
+// Existing routes
 router.get("/bookings", authorizeUser, getUserBookings);
 router.get("/bookings/:bookingId", authorizeUser, getBookingDetails);
 router.get("/notifications", authorizeUser, getUserNotifications);

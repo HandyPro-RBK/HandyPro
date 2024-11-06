@@ -156,10 +156,67 @@ const getUnreadNotificationsCount = async (req, res) => {
   }
 };
 
+const getDashboardSummary = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get counts for different booking statuses
+    const bookingStats = await prisma.booking.groupBy({
+      by: ["status"],
+      where: {
+        userId: userId,
+      },
+      _count: true,
+    });
+
+    // Get recent bookings
+    const recentBookings = await prisma.booking.findMany({
+      where: {
+        userId: userId,
+      },
+      take: 5,
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        service: {
+          select: {
+            name: true,
+            price: true,
+          },
+        },
+        provider: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
+
+    // Get unread notifications count
+    const unreadNotifications = await prisma.notification.count({
+      where: {
+        userId: userId,
+        isRead: false,
+      },
+    });
+
+    res.json({
+      bookingStats,
+      recentBookings,
+      unreadNotifications,
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard summary:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard summary" });
+  }
+};
+
 module.exports = {
   getUserBookings,
   getBookingDetails,
   getUserNotifications,
   markNotificationAsRead,
   getUnreadNotificationsCount,
+  getDashboardSummary,
 };
