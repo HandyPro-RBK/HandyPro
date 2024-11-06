@@ -88,7 +88,78 @@ const getBookingDetails = async (req, res) => {
   }
 };
 
+const getUserNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const notifications = await prisma.notification.findMany({
+      where: {
+        userId: userId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        provider: {
+          select: {
+            username: true,
+            photoUrl: true,
+          },
+        },
+      },
+    });
+
+    res.json(notifications);
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ error: "Failed to fetch notifications" });
+  }
+};
+
+const markNotificationAsRead = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    const userId = req.user.id;
+
+    const notification = await prisma.notification.updateMany({
+      where: {
+        id: parseInt(notificationId),
+        userId: userId,
+      },
+      data: {
+        isRead: true,
+      },
+    });
+
+    res.json({ message: "Notification marked as read" });
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    res.status(500).json({ error: "Failed to update notification" });
+  }
+};
+
+const getUnreadNotificationsCount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const count = await prisma.notification.count({
+      where: {
+        userId: userId,
+        isRead: false,
+      },
+    });
+
+    res.json({ unreadCount: count });
+  } catch (error) {
+    console.error("Error fetching unread notifications count:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to fetch unread notifications count" });
+  }
+};
+
 module.exports = {
   getUserBookings,
   getBookingDetails,
+  getUserNotifications,
+  markNotificationAsRead,
+  getUnreadNotificationsCount,
 };
