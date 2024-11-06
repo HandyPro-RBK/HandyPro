@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// Update getUserBookings to include provider information
 const getUserBookings = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -16,6 +17,14 @@ const getUserBookings = async (req, res) => {
             description: true,
             image: true,
             duration: true,
+          },
+        },
+        provider: {
+          select: {
+            username: true,
+            photoUrl: true,
+            phoneNumber: true,
+            rating: true,
           },
         },
       },
