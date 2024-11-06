@@ -1,7 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// Update getUserBookings to include payment information
 const getUserBookings = async (req, res) => {
   try {
     const userId = req.user.id;
