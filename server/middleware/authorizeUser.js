@@ -10,15 +10,31 @@ const authorizeUser = async (req, res, next) => {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const decoded = jwt.verify(token, "your_secret_key");
+    let decoded;
+    try {
+      decoded = jwt.verify(token, "your_secret_key");
+    } catch (jwtError) {
+      if (jwtError.name === "TokenExpiredError") {
+        return res.status(401).json({
+          error: "Token has expired",
+          code: "TOKEN_EXPIRED",
+        });
+      }
+      return res.status(401).json({
+        error: "Invalid token",
+        code: "INVALID_TOKEN",
+      });
+    }
 
-    // Changed from decoded.userId to decoded.id
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
     });
 
     if (!user) {
-      return res.status(401).json({ error: "User not found" });
+      return res.status(401).json({
+        error: "User not found",
+        code: "USER_NOT_FOUND",
+      });
     }
 
     req.user = user;
@@ -27,18 +43,25 @@ const authorizeUser = async (req, res, next) => {
       return next();
     }
 
+    if (req.path.includes("/bookings")) {
+      return next();
+    }
+
     const isAccessingOwnResource = req.params.userId === user.id.toString();
     if (!isAccessingOwnResource) {
-      return res.status(403).json({ error: "Access denied" });
+      return res.status(403).json({
+        error: "Access denied",
+        code: "ACCESS_DENIED",
+      });
     }
 
     next();
   } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({ error: "Invalid token" });
-    }
     console.error("Authorization error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({
+      error: "Internal server error",
+      code: "INTERNAL_ERROR",
+    });
   }
 };
 

@@ -12,27 +12,6 @@ const fetchCategories = async (req, res) => {
   }
 };
 
-// Create a new category
-const createCategory = async (req, res) => {
-  try {
-    const { name, description } = req.body;
-
-    if (!name || !description) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-
-    const category = await prisma.category.create({
-      data: { name, description },
-    });
-
-    res.status(201).json({ success: true, category });
-  } catch (error) {
-    console.error("Error creating category:", error);
-    res.status(500).json({ error: "Failed to create category" });
-  }
-};
-
 module.exports = {
   fetchCategories,
-  createCategory,
 };

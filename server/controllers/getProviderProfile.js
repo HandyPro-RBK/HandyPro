@@ -4,7 +4,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const getProviderProfile = async (req, res) => {
-  const { providerId } = req.params;
+  const providerId  = req.provider.id;
+
 
   try {
     const provider = await prisma.serviceProvider.findUnique({
@@ -33,11 +34,22 @@ const getProviderProfile = async (req, res) => {
 };
 
 const updateProviderProfile = async (req, res) => {
-  const { providerId } = req.params;
+  const providerId = req.provider.id;
   const updates = req.body;
-
+ 
   try {
-    // Optionally validate the updates here
+    // Basic validation
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "No updates provided" });
+    }
+
+   
+    delete updates.id; 
+    
+   
+    if (updates.email && !isValidEmail(updates.email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
 
     const updatedProvider = await prisma.serviceProvider.update({
       where: { id: Number(providerId) },
@@ -52,10 +64,27 @@ const updateProviderProfile = async (req, res) => {
       identityCard: undefined,
     };
 
-    res.status(200).send(providerResponse);
+    res.status(200).json({
+      success: true,
+      data: providerResponse,
+      message: "Profile updated successfully"
+    });
+    
   } catch (err) {
     console.error("Error updating provider profile:", err);
-    res.status(500).send("Server error");
+    
+    
+    if (err.code === 'P2002') {
+      return res.status(400).json({ 
+        success: false,
+        message: "This email is already in use" 
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false,
+      message: "Server error while updating profile" 
+    });
   }
 };
 

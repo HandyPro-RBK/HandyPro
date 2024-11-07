@@ -5,11 +5,12 @@ const serviceRouter = require("./routes/serviceRoutes");
 const myCategoryRoutes = require("./routes/myCategoryRoutes");
 const myServiceRoutes = require("./routes/myServiceRoutes");
 const providerRoutes = require("./routes/bookingprovider");
+const dashboardRouter = require("./routes/dashboardRoutes");
 
 const serviceProviderRouter = require("./routes/providerRoutes");
 const { PrismaClient } = require("@prisma/client");
 const bodyParser = require("body-parser");
-
+const authorizeProvider = require("./middleware/authorizeProvider");
 const app = express();
 app.use(cors());
 
@@ -23,12 +24,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/user", userRouter);
-app.use("/service", serviceRouter);
+app.use("/service",authorizeProvider, serviceRouter);
 app.use("/api/my-categories", myCategoryRoutes);
 app.use("/api/my-services", myServiceRoutes);
-app.use("/service-provider", serviceProviderRouter); // Add the service provider route
-app.use("/provider", providerRoutes);
+app.use("/service-provider", serviceProviderRouter); 
+app.use("/provider",authorizeProvider, providerRoutes);
+app.use("/serviceDetail",authorizeProvider, servicedRoutes);
 // app.use("/posts", postDetailRoutes);
+app.use("/api/dashboard", dashboardRouter);
 const prisma = new PrismaClient();
 
 const PORT = 3001;
