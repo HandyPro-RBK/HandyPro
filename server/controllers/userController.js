@@ -110,7 +110,7 @@ const loginUser = async (req, res) => {
       { expiresIn: "7h" }
     );
 
-    res.status(200).send({ token });
+    res.status(200).send({ token ,user:"user"});
   } catch (err) {
     console.error("Error logging in:", err);
     res.status(500).send(err);

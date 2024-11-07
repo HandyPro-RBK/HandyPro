@@ -150,6 +150,7 @@ const loginServiceProvider = async (req, res) => {
     };
 
     res.status(200).send({
+      user:'provider',
       provider: providerResponse,
       token,
     });
