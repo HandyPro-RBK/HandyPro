@@ -13,17 +13,18 @@ const { PrismaClient } = require("@prisma/client");
 const bodyParser = require("body-parser");
 const authorizeProvider = require("./middleware/authorizeProvider");
 const app = express();
-app.use(cors());
 
-// Move body-parser configuration before defining routes
+// Middleware
+app.use(cors());
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
-require("dotenv").config();
-
-// Define routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Environment variables
+require("dotenv").config();
+
+// Routes
 app.use("/user", userRouter);
 app.use("/service", authorizeProvider, serviceRouter);
 app.use("/api/my-categories", myCategoryRoutes);
@@ -34,9 +35,22 @@ app.use("/serviceDetail", authorizeProvider, servicedRoutes);
 // app.use("/posts", postDetailRoutes);
 app.use("/api/dashboard", dashboardRouter);
 const prisma = new PrismaClient();
+//admin 
+const userRoutesAdmin = require("./routes/routesAdmin/userRoutes");
+const serviceRoutesAdmin = require("./routes/routesAdmin/serviceRoutes");
+const analyticsRoutesAdmuin = require("./routes/routesAdmin/analyticsRoutes");
 
-const PORT = 3001;
+app.use("/users", userRoutesAdmin);
+app.use("/services", serviceRoutesAdmin);
+app.use("/stats", analyticsRoutesAdmuin);
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
+});
+// Start server
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-//hello
