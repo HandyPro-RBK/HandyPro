@@ -6,6 +6,7 @@ const myCategoryRoutes = require("./routes/myCategoryRoutes");
 const myServiceRoutes = require("./routes/myServiceRoutes");
 const providerRoutes = require("./routes/bookingprovider");
 const dashboardRouter = require("./routes/dashboardRoutes");
+const servicedRoutes = require("./routes/postDetailRoutes");
 
 const serviceProviderRouter = require("./routes/providerRoutes");
 const { PrismaClient } = require("@prisma/client");
@@ -40,3 +41,4 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+//test
