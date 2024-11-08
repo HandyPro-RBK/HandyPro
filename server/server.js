@@ -35,7 +35,20 @@ app.use("/serviceDetail", authorizeProvider, servicedRoutes);
 // app.use("/posts", postDetailRoutes);
 app.use("/api/dashboard", dashboardRouter);
 const prisma = new PrismaClient();
+//admin 
+const userRoutesAdmin = require("./routes/routesAdmin/userRoutes");
+const serviceRoutesAdmin = require("./routes/routesAdmin/serviceRoutes");
+const analyticsRoutesAdmuin = require("./routes/routesAdmin/analyticsRoutes");
 
+app.use("/users", userRoutesAdmin);
+app.use("/services", serviceRoutesAdmin);
+app.use("/stats", analyticsRoutesAdmuin);
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
+});
 // Start server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
