@@ -200,7 +200,7 @@ const deleteUser = async (req, res) => {
   try {
     const userId = req.params.userId;
     await prisma.user.delete({ where: { id: parseInt(userId) } });
-    res.status(204).send(); // No content
+    res.status(204).send(); 
   } catch (err) {
     if (err.code === "P2025") {
       return res.status(404).send("User not found");

@@ -1,26 +1,27 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+
+
 const createService = async (req, res) => {
   try {
-    console.log(req.body);
-
+    const providerId = req.provider.id; 
+    
     const {
       name,
       description,
       price,
       duration,
       categoryId,
-      providerId,
       image,
     } = req.body;
-    // Validate required fields
-    if (!name || !description || !price || !categoryId || !providerId) {
+
+
+    if (!name || !description || !price || !categoryId) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    // Create service
-    console.log("DATABASE_URL:", process.env.DATABASE_URL);
+   
     const service = await prisma.service.create({
       data: {
         name,
@@ -28,12 +29,11 @@ const createService = async (req, res) => {
         price: parseFloat(price),
         duration: parseInt(duration),
         categoryId: parseInt(categoryId),
-        providerId: parseInt(providerId),
+        providerId: providerId, 
         image: image || "",
         isActive: true,
       },
     });
-    console.log(service);
 
     res.status(201).json({
       success: true,
@@ -48,22 +48,23 @@ const createService = async (req, res) => {
 
 const getServicesByProvider = async (req, res) => {
   try {
-    const { providerId } = req.params;
+    const providerId = req.provider.id; 
+    
     const services = await prisma.service.findMany({
       where: {
-        providerId: parseInt(providerId),
+        providerId: providerId,
       },
       include: {
         category: true,
       },
     });
+    
     res.json(services);
   } catch (error) {
     console.error("Error fetching services:", error);
     res.status(500).json({ error: "Failed to fetch services" });
   }
 };
-
 const getCategories = async (req, res) => {
   try {
     const categories = await prisma.category.findMany();

@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('CUSTOMER', 'ADMIN');
+CREATE TYPE "UserRole" AS ENUM ('CUSTOMER', 'ADMIN', 'PROVIDER');
 
 -- CreateEnum
 CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'REJECTED');
@@ -29,7 +29,6 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "ServiceProvider" (
     "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password" VARCHAR(255) NOT NULL,
     "username" VARCHAR(50) NOT NULL,
@@ -38,7 +37,7 @@ CREATE TABLE "ServiceProvider" (
     "photoUrl" VARCHAR(1024),
     "address" VARCHAR(255),
     "phoneNumber" VARCHAR(15),
-    "age" INTEGER,
+    "age" TEXT,
     "rating" DECIMAL(3,2) DEFAULT 0.0,
     "isAvailable" BOOLEAN NOT NULL DEFAULT true,
 
@@ -57,6 +56,7 @@ CREATE TABLE "Service" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "image" TEXT NOT NULL DEFAULT '',
 
     CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
 );
@@ -93,6 +93,7 @@ CREATE TABLE "Review" (
 -- CreateTable
 CREATE TABLE "Category" (
     "id" SERIAL NOT NULL,
+    "image" TEXT NOT NULL DEFAULT '',
     "name" VARCHAR(50) NOT NULL,
     "description" TEXT,
 
@@ -145,16 +146,10 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ServiceProvider_userId_key" ON "ServiceProvider"("userId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "ServiceProvider_email_key" ON "ServiceProvider"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
-
--- AddForeignKey
-ALTER TABLE "ServiceProvider" ADD CONSTRAINT "ServiceProvider_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Service" ADD CONSTRAINT "Service_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "ServiceProvider"("id") ON DELETE CASCADE ON UPDATE CASCADE;

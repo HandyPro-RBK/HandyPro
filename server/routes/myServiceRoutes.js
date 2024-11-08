@@ -2,10 +2,16 @@ const express = require("express");
 const router = express.Router();
 const {
   fetchAllServices,
-  updateService,
+  fetchServiceDetails,
+  createBooking,
 } = require("../controllers/myServiceController");
+const authorizeUser = require("../middleware/authorizeUser");
 
-router.get("/", fetchAllServices); // Fetch all services
-router.put("/:id", updateService); // Update a service by ID
+// Public routes
+router.get("/", fetchAllServices);
+router.get("/:id", fetchServiceDetails);
+
+// Protected booking route
+router.post("/bookings", authorizeUser, createBooking);
 
 module.exports = router;

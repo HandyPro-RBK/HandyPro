@@ -1,6 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
@@ -27,7 +30,7 @@ model User {
   phoneNumber       String            @db.VarChar(15)
   photoUrl          String            @db.VarChar(1024)
 
-  serviceProvider    ServiceProvider?
+  
   reviews           Review[]
   bookings          Booking[]
   notifications     Notification[]
@@ -35,12 +38,12 @@ model User {
 
 model ServiceProvider {
   id                Int               @id @default(autoincrement())
-  userId            Int               @unique
-   email             String            @unique @db.VarChar(255)
+  
+  email             String            @unique @db.VarChar(255)
   password          String            @db.VarChar(255)
   username          String             @db.VarChar(50)
   certification     Bytes?
-    identityCard      Bytes?
+  identityCard      Bytes?
   photoUrl          String?           @db.VarChar(1024)
   address           String?           @db.VarChar(255)
   phoneNumber       String?           @db.VarChar(15)
@@ -48,7 +51,7 @@ model ServiceProvider {
   rating            Decimal?          @default(0.0) @db.Decimal(3, 2)
   isAvailable       Boolean           @default(true)
   
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
   services          Service[]
   reviews           Review[]          @relation("ProviderReviews")
   bookings          Booking[]
@@ -67,7 +70,7 @@ model Service {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   isActive          Boolean           @default(true)
-image       String          @default("")
+  image             String          @default("")
 
   provider          ServiceProvider   @relation(fields: [providerId], references: [id], onDelete: Cascade)
   category          Category          @relation(fields: [categoryId], references: [id])
@@ -109,7 +112,7 @@ model Review {
 
 model Category {
   id                Int               @id @default(autoincrement())
-  image       String          @default("")
+  image             String            @default("")
 
   name              String            @unique @db.VarChar(50)
   description       String?           @db.Text
@@ -158,6 +161,7 @@ model Notification {
 enum UserRole {
   CUSTOMER
   ADMIN
+  PROVIDER
 }
 
 enum BookingStatus {
@@ -176,6 +180,6 @@ enum PaymentStatus {
 }
 
 enum PaymentMethod {
- ONLINE
+  ONLINE
   CASH
 }

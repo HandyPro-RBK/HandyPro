@@ -1,7 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// Fetch all services with categories included
 const fetchAllServices = async (req, res) => {
   try {
     const services = await prisma.service.findMany({
@@ -14,45 +13,142 @@ const fetchAllServices = async (req, res) => {
   }
 };
 
-// Update a service by ID
-const updateService = async (req, res) => {
+const fetchServiceDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      name,
-      description,
-      price,
-      duration,
-      categoryId,
-      providerId,
-      image,
-    } = req.body;
 
-    const updatedService = await prisma.service.update({
+    const service = await prisma.service.findUnique({
       where: { id: parseInt(id) },
-      data: {
-        name,
-        description,
-        price: parseFloat(price),
-        duration: parseInt(duration),
-        categoryId: parseInt(categoryId),
-        providerId: parseInt(providerId),
-        image,
+      include: {
+        category: true,
+        provider: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            photoUrl: true,
+            rating: true,
+            isAvailable: true,
+          },
+        },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                photoUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 5,
+        },
+        bookings: {
+          where: {
+            status: "CONFIRMED",
+          },
+          select: {
+            id: true,
+            bookingDate: true,
+            status: true,
+          },
+          orderBy: {
+            bookingDate: "asc",
+          },
+          take: 5,
+        },
       },
     });
 
-    res.json({
-      success: true,
-      message: "Service updated successfully",
-      service: updatedService,
+    if (!service) {
+      return res.status(404).json({ error: "Service not found" });
+    }
+
+    const averageRating =
+      service.reviews.length > 0
+        ? service.reviews.reduce((acc, review) => acc + review.rating, 0) /
+          service.reviews.length
+        : 0;
+
+    const serviceWithRating = {
+      ...service,
+      averageRating: parseFloat(averageRating.toFixed(1)),
+    };
+
+    res.json(serviceWithRating);
+  } catch (error) {
+    console.error("Error fetching service details:", error);
+    res.status(500).json({ error: "Failed to fetch service details" });
+  }
+};
+
+const createBooking = async (req, res) => {
+  try {
+    const { serviceId, providerId, bookingDate, notes } = req.body;
+    // Get authenticated user's ID from req.user
+    const userId = req.user.id;
+
+    const serviceExists = await prisma.service.findUnique({
+      where: { id: serviceId },
+    });
+
+    const providerExists = await prisma.serviceProvider.findUnique({
+      where: { id: providerId },
+    });
+
+    if (!serviceExists) {
+      return res.status(400).json({ error: "Service does not exist" });
+    }
+
+    if (!providerExists) {
+      return res.status(400).json({ error: "Provider does not exist" });
+    }
+
+    const existingBookings = await prisma.booking.findMany({
+      where: {
+        providerId,
+        bookingDate: bookingDate,
+        status: { not: "CANCELLED" },
+      },
+    });
+
+    if (existingBookings.length > 0) {
+      return res
+        .status(400)
+        .json({ error: "The requested date and time are not available" });
+    }
+
+    const booking = await prisma.booking.create({
+      data: {
+        userId,
+        serviceId,
+        providerId,
+        bookingDate,
+        notes: notes || null,
+        status: "PENDING",
+        totalPrice: serviceExists.price || 0,
+      },
+      include: {
+        service: true,
+        provider: true,
+      },
+    });
+
+    res.status(201).json({
+      message: "Booking Request Sent",
+      booking,
     });
   } catch (error) {
-    console.error("Error updating service:", error);
-    res.status(500).json({ error: "Failed to update service" });
+    console.error("Error creating booking:", error);
+    res.status(500).json({ error: "Failed to create booking" });
   }
 };
 
 module.exports = {
   fetchAllServices,
-  updateService,
+  fetchServiceDetails,
+  createBooking,
 };
