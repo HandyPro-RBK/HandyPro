@@ -18,10 +18,36 @@ const validateProviderRegistration = (data) => {
       }),
     certification: Joi.string().optional(),
     identityCard: Joi.string().optional(),
-    address: Joi.string().max(255).required(),
+    city: Joi.string()
+      .valid(
+        "TUNIS",
+        "SFAX",
+        "SOUSSE",
+        "KAIROUAN",
+        "BIZERTE",
+        "GABES",
+        "ARIANA",
+        "GAFSA",
+        "MONASTIR",
+        "BEN_AROUS",
+        "KASSERINE",
+        "MEDENINE",
+        "NABEUL",
+        "TATAOUINE",
+        "BEJA",
+        "JENDOUBA",
+        "MAHDIA",
+        "SILIANA",
+        "KEF",
+        "TOZEUR",
+        "MANOUBA",
+        "ZAGHOUAN",
+        "KEBILI"
+      )
+      .required(),
     phoneNumber: Joi.string().max(15).required(),
     photoUrl: Joi.string().max(1024).optional(),
-    age: Joi.string().optional(),
+    birthDate: Joi.date().iso().required(),
   });
   return schema.validate(data);
 };
@@ -45,13 +71,12 @@ const createNewServiceProvider = async (req, res) => {
       password,
       certification,
       identityCard,
-      address,
+      city,
       phoneNumber,
       photoUrl,
-      age,
+      birthDate,
     } = req.body;
 
-    // Check for existing provider
     const existingProvider = await prisma.serviceProvider.findUnique({
       where: { email },
     });
@@ -60,10 +85,8 @@ const createNewServiceProvider = async (req, res) => {
       return res.status(400).send("Email already in use");
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new provider
     const newProvider = await prisma.serviceProvider.create({
       data: {
         username,
@@ -73,10 +96,10 @@ const createNewServiceProvider = async (req, res) => {
           ? Buffer.from(certification, "base64")
           : null,
         identityCard: identityCard ? Buffer.from(identityCard, "base64") : null,
-        address,
+        city,
         phoneNumber,
         photoUrl: photoUrl || null,
-        age,
+        birthDate: new Date(birthDate),
         isAvailable: true,
         rating: 0.0,
       },
@@ -92,7 +115,6 @@ const createNewServiceProvider = async (req, res) => {
       { expiresIn: "7h" }
     );
 
-    // Remove  data before sending response
     const providerResponse = {
       ...newProvider,
       password: undefined,
@@ -130,7 +152,6 @@ const loginServiceProvider = async (req, res) => {
       return res.status(400).send("Invalid email or password");
     }
 
-    // Generate  token
     const token = jwt.sign(
       {
         id: provider.id,
@@ -141,7 +162,6 @@ const loginServiceProvider = async (req, res) => {
       { expiresIn: "7h" }
     );
 
-    // Remove  data before sending response
     const providerResponse = {
       ...provider,
       password: undefined,
@@ -159,7 +179,6 @@ const loginServiceProvider = async (req, res) => {
   }
 };
 
-// update and get
 const updateServiceProvider = async (req, res) => {
   try {
     const { id } = req.provider;
@@ -167,16 +186,20 @@ const updateServiceProvider = async (req, res) => {
 
     const allowedUpdates = [
       "username",
-      "address",
+      "city",
       "phoneNumber",
       "photoUrl",
-      "age",
+      "birthDate",
       "isAvailable",
     ];
 
     allowedUpdates.forEach((field) => {
       if (req.body[field] !== undefined) {
-        updateData[field] = req.body[field];
+        if (field === "birthDate") {
+          updateData[field] = new Date(req.body[field]);
+        } else {
+          updateData[field] = req.body[field];
+        }
       }
     });
 
@@ -205,6 +228,12 @@ const getProviderProfile = async (req, res) => {
 
     const provider = await prisma.serviceProvider.findUnique({
       where: { id },
+      include: {
+        services: true,
+        reviews: true,
+        bookings: true,
+        schedule: true,
+      },
     });
 
     if (!provider) {
@@ -231,6 +260,9 @@ const getProviderServices = async (req, res) => {
 
     const services = await prisma.service.findMany({
       where: { providerId: id },
+      include: {
+        category: true,
+      },
     });
 
     res.status(200).json(services);
@@ -240,7 +272,6 @@ const getProviderServices = async (req, res) => {
   }
 };
 
-// Add these to the exports
 module.exports = {
   createNewServiceProvider,
   loginServiceProvider,

@@ -35,7 +35,7 @@ app.use("/serviceDetail", authorizeProvider, servicedRoutes);
 // app.use("/posts", postDetailRoutes);
 app.use("/api/dashboard", dashboardRouter);
 const prisma = new PrismaClient();
-//admin 
+//admin
 const userRoutesAdmin = require("./routes/routesAdmin/userRoutes");
 const serviceRoutesAdmin = require("./routes/routesAdmin/serviceRoutes");
 const analyticsRoutesAdmuin = require("./routes/routesAdmin/analyticsRoutes");
@@ -54,4 +54,3 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-//hello
