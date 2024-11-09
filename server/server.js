@@ -35,7 +35,7 @@ app.use("/serviceDetail", authorizeProvider, servicedRoutes);
 // app.use("/posts", postDetailRoutes);
 app.use("/api/dashboard", dashboardRouter);
 const prisma = new PrismaClient();
-//admin 
+//admin
 const userRoutesAdmin = require("./routes/routesAdmin/userRoutes");
 const serviceRoutesAdmin = require("./routes/routesAdmin/serviceRoutes");
 const analyticsRoutesAdmuin = require("./routes/routesAdmin/analyticsRoutes");
