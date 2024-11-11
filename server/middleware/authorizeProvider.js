@@ -1,10 +1,17 @@
+<<<<<<< HEAD
 
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
+=======
+// middleware/authorizeProvider.js
+>>>>>>> 3c53ab2d7ac567bc5efa27c897ea9f7913ad9b5a
 
+const jwt = require('jsonwebtoken');
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const authorizeProvider = async (req, res, next) => {
+<<<<<<< HEAD
   try {
     // Check if Authorization header exists
     if (!req.headers.authorization) {
@@ -76,6 +83,64 @@ const authorizeProvider = async (req, res, next) => {
       details: "An unexpected error occurred during authorization",
     });
   }
+=======
+    try {
+        // Get token from header
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'No token provided'
+            });
+        }
+
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_secret_key");
+        console.log("Decoded Token:", decoded);
+
+        // Check if provider exists
+        const provider = await prisma.serviceProvider.findUnique({
+            where: { id: decoded.id }
+        });
+
+        if (!provider) {
+            return res.status(401).json({
+                success: false,
+                message: 'Provider not found'
+            });
+        }
+
+        // Add provider to request
+        req.provider = provider;
+        req.providerId = provider.id;
+        console.log("Provider authorized:", provider.id);
+
+        next();
+
+    } catch (error) {
+        console.error("Authorization error:", error);
+        
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({
+                success: false,
+                message: 'Token expired'
+            });
+        }
+
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid token'
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+>>>>>>> 3c53ab2d7ac567bc5efa27c897ea9f7913ad9b5a
 };
 
 module.exports = authorizeProvider;

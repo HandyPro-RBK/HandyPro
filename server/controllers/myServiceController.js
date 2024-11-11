@@ -13,44 +13,6 @@ const fetchAllServices = async (req, res) => {
   }
 };
 
-const updateService = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      name,
-      description,
-      price,
-      duration,
-      categoryId,
-      providerId,
-      image,
-    } = req.body;
-
-    const updatedService = await prisma.service.update({
-      where: { id: parseInt(id) },
-      data: {
-        name,
-        description,
-        price: parseFloat(price),
-        duration: parseInt(duration),
-        categoryId: parseInt(categoryId),
-        providerId: parseInt(providerId),
-        image,
-      },
-    });
-
-    res.json({
-      success: true,
-      message: "Service updated successfully",
-      service: updatedService,
-    });
-  } catch (error) {
-    console.error("Error updating service:", error);
-    res.status(500).json({ error: "Failed to update service" });
-  }
-};
-
-// New function to fetch service details by ID
 const fetchServiceDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -82,7 +44,7 @@ const fetchServiceDetails = async (req, res) => {
           orderBy: {
             createdAt: "desc",
           },
-          take: 5, // Get only the 5 most recent reviews
+          take: 5,
         },
         bookings: {
           where: {
@@ -96,7 +58,7 @@ const fetchServiceDetails = async (req, res) => {
           orderBy: {
             bookingDate: "asc",
           },
-          take: 5, // Get only the 5 upcoming bookings
+          take: 5,
         },
       },
     });
@@ -105,14 +67,12 @@ const fetchServiceDetails = async (req, res) => {
       return res.status(404).json({ error: "Service not found" });
     }
 
-    // Calculate average rating from reviews
     const averageRating =
       service.reviews.length > 0
         ? service.reviews.reduce((acc, review) => acc + review.rating, 0) /
           service.reviews.length
         : 0;
 
-    // Add average rating to the response
     const serviceWithRating = {
       ...service,
       averageRating: parseFloat(averageRating.toFixed(1)),
@@ -125,8 +85,70 @@ const fetchServiceDetails = async (req, res) => {
   }
 };
 
+const createBooking = async (req, res) => {
+  try {
+    const { serviceId, providerId, bookingDate, notes } = req.body;
+    // Get authenticated user's ID from req.user
+    const userId = req.user.id;
+
+    const serviceExists = await prisma.service.findUnique({
+      where: { id: serviceId },
+    });
+
+    const providerExists = await prisma.serviceProvider.findUnique({
+      where: { id: providerId },
+    });
+
+    if (!serviceExists) {
+      return res.status(400).json({ error: "Service does not exist" });
+    }
+
+    if (!providerExists) {
+      return res.status(400).json({ error: "Provider does not exist" });
+    }
+
+    const existingBookings = await prisma.booking.findMany({
+      where: {
+        providerId,
+        bookingDate: bookingDate,
+        status: { not: "CANCELLED" },
+      },
+    });
+
+    if (existingBookings.length > 0) {
+      return res
+        .status(400)
+        .json({ error: "The requested date and time are not available" });
+    }
+
+    const booking = await prisma.booking.create({
+      data: {
+        userId,
+        serviceId,
+        providerId,
+        bookingDate,
+        notes: notes || null,
+        status: "PENDING",
+        totalPrice: serviceExists.price || 0,
+      },
+      include: {
+        service: true,
+        provider: true,
+      },
+    });
+
+    res.status(201).json({
+      message: "Booking Request Sent",
+      booking,
+    });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    res.status(500).json({ error: "Failed to create booking" });
+  }
+};
+
 module.exports = {
   fetchAllServices,
-  updateService,
   fetchServiceDetails,
+  createBooking,
 };
