@@ -170,10 +170,10 @@ const getDashboardSummary = async (req, res) => {
 
     // Get recent bookings
     const recentBookings = await prisma.booking.findMany({
+      take: 5,
       where: {
         userId: userId,
       },
-      take: 5,
       orderBy: {
         createdAt: "desc",
       },
@@ -199,7 +199,6 @@ const getDashboardSummary = async (req, res) => {
         isRead: false,
       },
     });
-
     res.json({
       bookingStats,
       recentBookings,

@@ -5,15 +5,15 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 exports.getAllUsers = async (req, res) => {
-  let {role} = req.params
+  let { role } = req.params;
   console.log(role);
-  
-  let users = []
+
+  let users = [];
   try {
-    if(role ==="customer"){
-       users = await prisma.user.findMany({
-        where : {
-          userType : "CUSTOMER"
+    if (role === "customer") {
+      users = await prisma.user.findMany({
+        where: {
+          userType: "CUSTOMER",
         },
         select: {
           id: true,
@@ -26,26 +26,25 @@ exports.getAllUsers = async (req, res) => {
           createdAt: true,
         },
       });
-    }
-    else if (role ==="provider"){
-       users = await prisma.serviceProvider.findMany({
+    } else if (role === "provider") {
+      users = await prisma.serviceProvider.findMany({
         select: {
           id: true,
           username: true,
           email: true,
           isAvailable: true,
-          address: true,
+          city: true,
           phoneNumber: true,
           photoUrl: true,
-          rating : true
+          rating: true,
         },
       });
     }
-    
+
     res.json(users);
   } catch (error) {
     console.log(error.message);
-    
+
     res.status(500).json({ error: "Error fetching users" });
   }
 };
@@ -55,7 +54,7 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
     console.log(user);
-    
+
     if (!user || user.userType !== "ADMIN") {
       return res
         .status(401)
@@ -106,13 +105,12 @@ exports.adminSignup = async (req, res) => {
         email,
         password: hashedPassword,
         userType: "ADMIN", // Set role as admin
-        address : "123 Main St",
-        phoneNumber : "1234567890",
-        photoUrl : "https://example.com/photo.jpg",
+        address: "123 Main St",
+        phoneNumber: "1234567890",
+        photoUrl: "https://example.com/photo.jpg",
       },
     });
     console.log(newUser);
-    
 
     // Save user to database
     // await newUser.save();

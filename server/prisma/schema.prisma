@@ -23,7 +23,7 @@ model User {
   email             String            @unique @db.VarChar(255)
   password          String            @db.VarChar(255)
   username          String            @unique @db.VarChar(50)
-  userType          UserRole           @default(CUSTOMER)
+  userType          UserRole          @default(CUSTOMER)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   address           String            @db.VarChar(255)
@@ -35,28 +35,52 @@ model User {
   bookings          Booking[]
   notifications     Notification[]
 }
-
 model ServiceProvider {
   id                Int               @id @default(autoincrement())
   
   email             String            @unique @db.VarChar(255)
   password          String            @db.VarChar(255)
-  username          String             @db.VarChar(50)
-  certification     Bytes?
-  identityCard      Bytes?
+  username          String            @db.VarChar(50)
+  certification     String?
+  identityCard      String?
   photoUrl          String?           @db.VarChar(1024)
-  address           String?           @db.VarChar(255)
+  city              City              @default(TUNIS)
   phoneNumber       String?           @db.VarChar(15)
-  age               String?
+  birthDate         DateTime?
   rating            Decimal?          @default(0.0) @db.Decimal(3, 2)
   isAvailable       Boolean           @default(true)
   
- 
   services          Service[]
   reviews           Review[]          @relation("ProviderReviews")
   bookings          Booking[]
   schedule          Schedule[]
   notifications     Notification[]
+}
+
+enum City {
+  TUNIS
+  SFAX
+  SOUSSE
+  KAIROUAN
+  BIZERTE
+  GABES
+  ARIANA
+  GAFSA
+  MONASTIR
+  BEN_AROUS
+  KASSERINE
+  MEDENINE
+  NABEUL
+  TATAOUINE
+  BEJA
+  JENDOUBA
+  MAHDIA
+  SILIANA
+  KEF
+  TOZEUR
+  MANOUBA
+  ZAGHOUAN
+  KEBILI
 }
 
 model Service {
@@ -70,7 +94,7 @@ model Service {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   isActive          Boolean           @default(true)
-  image             String          @default("")
+  image             String            @default("")
 
   provider          ServiceProvider   @relation(fields: [providerId], references: [id], onDelete: Cascade)
   category          Category          @relation(fields: [categoryId], references: [id])
