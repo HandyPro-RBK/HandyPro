@@ -24,6 +24,7 @@ exports.getAllUsers = async (req, res) => {
           phoneNumber: true,
           photoUrl: true,
           createdAt: true,
+          isBanned: true,
         },
       });
     } else if (role === "provider") {
@@ -36,6 +37,10 @@ exports.getAllUsers = async (req, res) => {
           city: true,
           phoneNumber: true,
           photoUrl: true,
+          rating: true,
+          isBanned: true,
+          identityCard: true,
+          certification: true,
           rating: true,
         },
       });
@@ -157,4 +162,136 @@ exports.refreshToken = async (req, res) => {
   }
 };
 
+exports.deleteCategory = async (req, res) => {
+  const { id } = req.params;
+  const idInt = parseInt(id);
+  console.log(idInt);
+  try {
+    await prisma.service.deleteMany({
+      where: { categoryId: idInt },
+    });
+    const category = await prisma.category.delete({
+      where: {
+        id: idInt,
+      },
+    });
+    res.status(200).json({
+      message: "Category with name " + category.name + " deleted successfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: "Error deleting category" });
+  }
+};
+exports.createCategory = async (req, res) => {
+  const { name, image, description } = req.body;
+  try {
+    const category = await prisma.category.create({
+      data: {
+        name,
+        image,
+        description,
+      },
+    });
+    res.status(201).json({
+      message: "Category created successfully",
+      category,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: "Error creating category" });
+  }
+};
+
+// update Category by Id
+exports.updateCategory = async (req, res) => {
+  const { id } = req.params;
+  const { name, image, description } = req.body;
+  try {
+    const category = await prisma.category.update({
+      where: { id: parseInt(id) },
+      data: {
+        name,
+        image,
+        description,
+      },
+    });
+    res.status(200).json({
+      message: "Category updated successfully",
+      category,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: "Error updating category" });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  const { id } = req.params;
+  const { type } = req.query;
+  try {
+    if (type === "customer") {
+      await prisma.user.delete({
+        where: { id: parseInt(id) },
+      });
+    } else if (type === "provider") {
+      await prisma.serviceProvider.delete({
+        where: { id: parseInt(id) },
+      });
+    }
+    res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: "Error deleting user" });
+  }
+};
+
+exports.banUser = async (req, res) => {
+  const { isBanned } = req.body;
+  const { id } = req.params;
+  const { type } = req.query;
+  try {
+    if (type === "customer") {
+      await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: {
+          isBanned: isBanned,
+        },
+      });
+    } else if (type === "provider") {
+      await prisma.serviceProvider.update({
+        where: { id: parseInt(id) },
+        data: {
+          isBanned: isBanned,
+        },
+      });
+    }
+    res.status(200).json({
+      message: "User banned successfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: "Error banning user" });
+  }
+};
+exports.validProvider = async (req, res) => {
+  const { isAvailable } = req.body;
+  const { id } = req.params;
+  try {
+    await prisma.serviceProvider.update({
+      where: { id: parseInt(id) },
+      data: {
+        isAvailable: isAvailable,
+      },
+    });
+    res.status(200).json({
+      message: "Provider validated successfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: "Error validating provider" });
+  }
+};
 // Add other user-related controller functions here
