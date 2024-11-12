@@ -51,7 +51,6 @@ const createNewServiceProvider = async (req, res) => {
       age,
     } = req.body;
 
-    // Check for existing provider
     const existingProvider = await prisma.serviceProvider.findUnique({
       where: { email },
     });
@@ -60,24 +59,20 @@ const createNewServiceProvider = async (req, res) => {
       return res.status(400).send("Email already in use");
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new provider
     const newProvider = await prisma.serviceProvider.create({
       data: {
         username,
         email,
         password: hashedPassword,
-        certification: certification
-          ? Buffer.from(certification, "base64")
-          : null,
+        certification: certification ? Buffer.from(certification, "base64") : null,
         identityCard: identityCard ? Buffer.from(identityCard, "base64") : null,
         address,
         phoneNumber,
         photoUrl: photoUrl || null,
         age,
-        isAvailable: true,
+        isAvailable: false, // Default to false until verified
         rating: 0.0,
       },
     });
@@ -87,12 +82,12 @@ const createNewServiceProvider = async (req, res) => {
         id: newProvider.id,
         email: newProvider.email,
         type: "SERVICE_PROVIDER",
+        isAvailable: false,
       },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
     );
 
-    // Remove  data before sending response
     const providerResponse = {
       ...newProvider,
       password: undefined,
@@ -130,18 +125,17 @@ const loginServiceProvider = async (req, res) => {
       return res.status(400).send("Invalid email or password");
     }
 
-    // Generate  token
     const token = jwt.sign(
       {
         id: provider.id,
         email: provider.email,
         type: "SERVICE_PROVIDER",
+        isAvailable: provider.isAvailable,
       },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
     );
 
-    // Remove  data before sending response
     const providerResponse = {
       ...provider,
       password: undefined,
@@ -150,7 +144,7 @@ const loginServiceProvider = async (req, res) => {
     };
 
     res.status(200).send({
-      user:'provider',
+      user: 'provider',
       provider: providerResponse,
       token,
     });
@@ -164,4 +158,3 @@ module.exports = {
   createNewServiceProvider,
   loginServiceProvider,
 };
-// this file its clear

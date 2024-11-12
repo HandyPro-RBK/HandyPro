@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
-const conversationRouter = require("./routes/conversations");
+const conversationRoutes = require('./routes/conversations');
 const userRouter = require("./routes/userRoutes");
 const serviceRouter = require("./routes/serviceRoutes");
 const myCategoryRoutes = require("./routes/myCategoryRoutes");
@@ -11,11 +11,12 @@ const providerRoutes = require("./routes/bookingprovider");
 const dashboardRouter = require("./routes/dashboardRoutes");
 const servicedRoutes = require("./routes/postDetailRoutes");
 const serviceProviderRouter = require("./routes/providerRoutes");
+
 const { PrismaClient } = require("@prisma/client");
 const bodyParser = require("body-parser");
 const authorizeProvider = require("./middleware/authorizeProvider");
+
 const app = express();
-app.use(cors());
 const server = createServer(app);
 
 // Fix 1: Correct CORS configuration for Socket.IO
@@ -29,26 +30,26 @@ const io = new Server(server, {
   pingInterval: 25000
 });
 
-// Move body-parser configuration before defining routes
+// Middleware
+app.use(cors());
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
-require("dotenv").config();
-
-// Define routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/api/conversations", conversationRouter);
+require("dotenv").config();
+
+// Routes
+app.use('/api/conversations', conversationRoutes);
 app.use("/user", userRouter);
-app.use("/service",authorizeProvider, serviceRouter);
+app.use("/service", authorizeProvider, serviceRouter);
 app.use("/api/my-categories", myCategoryRoutes);
 app.use("/api/my-services", myServiceRoutes);
-app.use("/service-provider", serviceProviderRouter); 
-app.use("/provider",authorizeProvider, providerRoutes);
-app.use("/serviceDetail",authorizeProvider, servicedRoutes);
-// app.use("/posts", postDetailRoutes);
+app.use("/service-provider", serviceProviderRouter);
+app.use("/provider", authorizeProvider, providerRoutes);
+app.use("/serviceDetail", authorizeProvider, servicedRoutes);
 app.use("/api/dashboard", dashboardRouter);
 const prisma = new PrismaClient();
-
+// Initialize socket controller
 io.on("connection", (socket) => {
   console.log("New client connected");
 
@@ -80,14 +81,20 @@ io.on("connection", (socket) => {
       socket.emit("messageError", { message: "Failed to save message" });
     }
   });
+  socket.on("messagesRead", (data) => {
+    // Émettre l'événement pour mettre à jour tous les clients connectés
+    io.emit("messagesRead", data);
+  });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
 });
 
-// Fix 2: Use server.listen instead of app.listen
-const PORT = 3001;
+
+
+
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

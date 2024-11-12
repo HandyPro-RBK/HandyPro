@@ -97,12 +97,22 @@ const loginUser = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        username: true,
+        photoUrl: true,
+        userType: true
+      }
+    });
+    
     if (!user) return res.status(400).send("Invalid email or password");
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
-      return res.status(400).send("Invalid email or password");
+    if (!isPasswordValid) return res.status(400).send("Invalid email or password");
 
     const token = jwt.sign(
       { id: user.id, email: user.email, userType: user.userType },
@@ -110,10 +120,22 @@ const loginUser = async (req, res) => {
       { expiresIn: "7h" }
     );
 
-    res.status(200).send({ token ,user:"user"});
+    // Send back user data without the password
+    const userResponse = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      photoUrl: user.photoUrl,
+      userType: user.userType
+    };
+
+    res.status(200).json({ 
+      token,
+      user: userResponse
+    });
   } catch (err) {
     console.error("Error logging in:", err);
-    res.status(500).send(err);
+    res.status(500).send("Server error");
   }
 };
 
