@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cloudinary = require("../config/cloudinaryConfig");
+
 const Joi = require("joi");
 
 const prisma = new PrismaClient();
@@ -85,6 +87,32 @@ const createNewServiceProvider = async (req, res) => {
       return res.status(400).send("Email already in use");
     }
 
+    // Upload certification to Cloudinary
+    let certificationUrl = "";
+    if (certification) {
+      const certificationResult = await cloudinary.uploader.upload(
+        certification,
+        {
+          folder: "certifications",
+          upload_preset: "ml_default",
+        }
+      );
+      certificationUrl = certificationResult.secure_url;
+    }
+
+    // Upload identity card to Cloudinary
+    let identityCardUrl = "";
+    if (identityCard) {
+      const identityCardResult = await cloudinary.uploader.upload(
+        identityCard,
+        {
+          folder: "identity-cards",
+          upload_preset: "ml_default",
+        }
+      );
+      identityCardUrl = identityCardResult.secure_url;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newProvider = await prisma.serviceProvider.create({
@@ -92,10 +120,8 @@ const createNewServiceProvider = async (req, res) => {
         username,
         email,
         password: hashedPassword,
-        certification: certification
-          ? Buffer.from(certification, "base64")
-          : null,
-        identityCard: identityCard ? Buffer.from(identityCard, "base64") : null,
+        certification: certificationUrl,
+        identityCard: identityCardUrl,
         city,
         phoneNumber,
         photoUrl: photoUrl || null,
@@ -110,6 +136,7 @@ const createNewServiceProvider = async (req, res) => {
         id: newProvider.id,
         email: newProvider.email,
         type: "SERVICE_PROVIDER",
+        isAvailable: false,
       },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
@@ -131,11 +158,11 @@ const createNewServiceProvider = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
-
 const loginServiceProvider = async (req, res) => {
   try {
     const { error } = validateProviderLogin(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    if (error)
+      return res.status(400).json({ message: error.details[0].message });
 
     const { email, password } = req.body;
 
@@ -144,12 +171,17 @@ const loginServiceProvider = async (req, res) => {
     });
 
     if (!provider) {
-      return res.status(400).send("Invalid email or password");
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    // Check if provider is banned
+    if (provider.isBanned) {
+      return res.status(403).json({ message: "Account Banned" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, provider.password);
     if (!isPasswordValid) {
-      return res.status(400).send("Invalid email or password");
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const token = jwt.sign(
@@ -157,6 +189,7 @@ const loginServiceProvider = async (req, res) => {
         id: provider.id,
         email: provider.email,
         type: "SERVICE_PROVIDER",
+        isAvailable: provider.isAvailable,
       },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
@@ -169,13 +202,14 @@ const loginServiceProvider = async (req, res) => {
       identityCard: undefined,
     };
 
-    res.status(200).send({
+    res.status(200).json({
+      user: 'provider',
       provider: providerResponse,
       token,
     });
   } catch (err) {
     console.error("Error logging in service provider:", err);
-    res.status(500).send("Server error");
+    res.status(500).json({ message: "Server error" });
   }
 };
 
