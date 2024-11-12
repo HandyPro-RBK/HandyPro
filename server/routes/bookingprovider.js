@@ -1,3 +1,4 @@
+// booking routes
 const express = require("express");
 const { getrequests,getHistory,accept,reject} = require("../controllers/bookingprovider");
 const {getProviderProfile,updateProviderProfile} = require("../controllers/getProviderProfile");
