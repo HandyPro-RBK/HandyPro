@@ -40,6 +40,10 @@ require("dotenv").config();
 
 // Routes
 app.use('/api/conversations', conversationRoutes);
+// Environment variables
+require("dotenv").config();
+
+// Routes
 app.use("/user", userRouter);
 app.use("/service", authorizeProvider, serviceRouter);
 app.use("/api/my-categories", myCategoryRoutes);
@@ -49,6 +53,22 @@ app.use("/provider", authorizeProvider, providerRoutes);
 app.use("/serviceDetail", authorizeProvider, servicedRoutes);
 app.use("/api/dashboard", dashboardRouter);
 const prisma = new PrismaClient();
+//admin
+const userRoutesAdmin = require("./routes/routesAdmin/userRoutes");
+const serviceRoutesAdmin = require("./routes/routesAdmin/serviceRoutes");
+const analyticsRoutesAdmuin = require("./routes/routesAdmin/analyticsRoutes");
+
+app.use("/users", userRoutesAdmin);
+app.use("/services", serviceRoutesAdmin);
+app.use("/stats", analyticsRoutesAdmuin);
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
+});
+
+
 // Initialize socket controller
 io.on("connection", (socket) => {
   console.log("New client connected");
@@ -98,3 +118,4 @@ const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
