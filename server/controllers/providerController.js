@@ -121,7 +121,6 @@ const createNewServiceProvider = async (req, res) => {
         email,
         password: hashedPassword,
         certification: certificationUrl,
-
         identityCard: identityCardUrl,
         city,
         phoneNumber,
@@ -137,6 +136,7 @@ const createNewServiceProvider = async (req, res) => {
         id: newProvider.id,
         email: newProvider.email,
         type: "SERVICE_PROVIDER",
+        isAvailable: false,
       },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
@@ -189,6 +189,7 @@ const loginServiceProvider = async (req, res) => {
         id: provider.id,
         email: provider.email,
         type: "SERVICE_PROVIDER",
+        isAvailable: provider.isAvailable,
       },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
@@ -202,6 +203,7 @@ const loginServiceProvider = async (req, res) => {
     };
 
     res.status(200).json({
+      user: 'provider',
       provider: providerResponse,
       token,
     });
