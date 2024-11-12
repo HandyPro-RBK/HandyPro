@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cloudinary = require("../config/cloudinaryConfig");
+
 const Joi = require("joi");
 
 const prisma = new PrismaClient();
@@ -85,6 +87,32 @@ const createNewServiceProvider = async (req, res) => {
       return res.status(400).send("Email already in use");
     }
 
+    // Upload certification to Cloudinary
+    let certificationUrl = "";
+    if (certification) {
+      const certificationResult = await cloudinary.uploader.upload(
+        certification,
+        {
+          folder: "certifications",
+          upload_preset: "ml_default",
+        }
+      );
+      certificationUrl = certificationResult.secure_url;
+    }
+
+    // Upload identity card to Cloudinary
+    let identityCardUrl = "";
+    if (identityCard) {
+      const identityCardResult = await cloudinary.uploader.upload(
+        identityCard,
+        {
+          folder: "identity-cards",
+          upload_preset: "ml_default",
+        }
+      );
+      identityCardUrl = identityCardResult.secure_url;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newProvider = await prisma.serviceProvider.create({
@@ -92,8 +120,8 @@ const createNewServiceProvider = async (req, res) => {
         username,
         email,
         password: hashedPassword,
-        certification: certification ? Buffer.from(certification, "base64") : null,
-        identityCard: identityCard ? Buffer.from(identityCard, "base64") : null,
+        certification: certificationUrl,
+        identityCard: identityCardUrl,
         city,
         phoneNumber,
         photoUrl: photoUrl || null,
