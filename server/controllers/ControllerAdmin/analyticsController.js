@@ -1,36 +1,36 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 exports.getTotalUsers = async (req, res) => {
   // count all user with role "CUSTOMER"
-
+  
   const customers = await prisma.user.count({
-    where: {
-      userType: "CUSTOMER",
-    },
+    where : {
+      userType : "CUSTOMER"
+    }
   });
-  const serviceProviders = await prisma.serviceProvider.count();
-  res.json({ customers, serviceProviders });
+  const serviceProviders = await prisma.serviceProvider.count()
+  res.json({ customers , serviceProviders });
 };
-exports.getBookingsByStatus = async (req, res) => {
+exports.  getBookingsByStatus = async (req, res) => {
   const pendingBookings = await prisma.booking.count({
-    where: { status: "PENDING" },
+    where: { status: 'PENDING' },
   });
   //count Confirmed booking status
   const confirmedBookings = await prisma.booking.count({
-    where: { status: "CONFIRMED" },
+    where: { status: 'CONFIRMED' },
   });
   //count Cancelled booking status
   const cancelledBookings = await prisma.booking.count({
-    where: { status: "CANCELLED" },
+    where: { status: 'CANCELLED' },
   });
   //count Completed booking status
   const completedBookings = await prisma.booking.count({
-    where: { status: "COMPLETED" },
+    where: { status: 'COMPLETED' },
   });
   //count Rejected booking status
   const rejectedBookings = await prisma.booking.count({
-    where: { status: "REJECTED" },
+    where: { status: 'REJECTED' },
   });
   //count Total bookings
   const totalBookings = await prisma.booking.count();
@@ -52,14 +52,14 @@ exports.getServicesByCategory = async (req, res) => {
   });
   res.json(servicesByCategory);
 };
-exports.allCategories = async (req, res) => {
+exports.allCategories = async (req,res)=>{
   const categories = await prisma.category.findMany({
     include: {
       services: true,
     },
   });
   res.json(categories);
-};
+}
 
 exports.getActiveServiceProviders = async (req, res) => {
   const activeProviders = await prisma.serviceProvider.count({
@@ -70,26 +70,26 @@ exports.getActiveServiceProviders = async (req, res) => {
 exports.getTotalRevenue = async (req, res) => {
   const revenue = await prisma.payment.aggregate({
     _sum: { amount: true },
-    where: { status: "COMPLETED" },
+    where: { status: 'COMPLETED' },
   });
   const bookings = await prisma.booking.findMany({
     include: {
-      user: {
-        select: {
-          email: true,
-        },
-      },
-      provider: {
-        select: {
-          email: true,
-        },
-      },
+      user :{
+        select :{
+          email : true ,
+        }
+      } , 
+      provider :{
+        select :{
+          email : true ,
+        }
+      } ,
       service: {
-        select: {
-          name: true,
-        },
+        select : {
+          name : true
+        }
       },
     },
   });
-  res.json({ totalRevenue: revenue._sum.amount, bookings });
+  res.json({ totalRevenue: revenue._sum.amount , bookings });
 };
