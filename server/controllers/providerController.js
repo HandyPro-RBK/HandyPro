@@ -18,10 +18,36 @@ const validateProviderRegistration = (data) => {
       }),
     certification: Joi.string().optional(),
     identityCard: Joi.string().optional(),
-    address: Joi.string().max(255).required(),
+    city: Joi.string()
+      .valid(
+        "TUNIS",
+        "SFAX",
+        "SOUSSE",
+        "KAIROUAN",
+        "BIZERTE",
+        "GABES",
+        "ARIANA",
+        "GAFSA",
+        "MONASTIR",
+        "BEN_AROUS",
+        "KASSERINE",
+        "MEDENINE",
+        "NABEUL",
+        "TATAOUINE",
+        "BEJA",
+        "JENDOUBA",
+        "MAHDIA",
+        "SILIANA",
+        "KEF",
+        "TOZEUR",
+        "MANOUBA",
+        "ZAGHOUAN",
+        "KEBILI"
+      )
+      .required(),
     phoneNumber: Joi.string().max(15).required(),
     photoUrl: Joi.string().max(1024).optional(),
-    age: Joi.string().optional(),
+    birthDate: Joi.date().iso().required(),
   });
   return schema.validate(data);
 };
@@ -45,13 +71,12 @@ const createNewServiceProvider = async (req, res) => {
       password,
       certification,
       identityCard,
-      address,
+      city,
       phoneNumber,
       photoUrl,
-      age,
+      birthDate,
     } = req.body;
 
-    // Check for existing provider
     const existingProvider = await prisma.serviceProvider.findUnique({
       where: { email },
     });
@@ -60,23 +85,19 @@ const createNewServiceProvider = async (req, res) => {
       return res.status(400).send("Email already in use");
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new provider
     const newProvider = await prisma.serviceProvider.create({
       data: {
         username,
         email,
         password: hashedPassword,
-        certification: certification
-          ? Buffer.from(certification, "base64")
-          : null,
+        certification: certification ? Buffer.from(certification, "base64") : null,
         identityCard: identityCard ? Buffer.from(identityCard, "base64") : null,
-        address,
+        city,
         phoneNumber,
         photoUrl: photoUrl || null,
-        age,
+        birthDate: new Date(birthDate),
         isAvailable: true,
         rating: 0.0,
       },
@@ -87,12 +108,12 @@ const createNewServiceProvider = async (req, res) => {
         id: newProvider.id,
         email: newProvider.email,
         type: "SERVICE_PROVIDER",
+        isAvailable: false,
       },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
     );
 
-    // Remove  data before sending response
     const providerResponse = {
       ...newProvider,
       password: undefined,
@@ -130,18 +151,17 @@ const loginServiceProvider = async (req, res) => {
       return res.status(400).send("Invalid email or password");
     }
 
-    // Generate  token
     const token = jwt.sign(
       {
         id: provider.id,
         email: provider.email,
         type: "SERVICE_PROVIDER",
+        isAvailable: provider.isAvailable,
       },
       process.env.JWT_SECRET || "your_secret_key",
       { expiresIn: "7h" }
     );
 
-    // Remove  data before sending response
     const providerResponse = {
       ...provider,
       password: undefined,
@@ -150,6 +170,7 @@ const loginServiceProvider = async (req, res) => {
     };
 
     res.status(200).send({
+      user: 'provider',
       provider: providerResponse,
       token,
     });
@@ -159,8 +180,103 @@ const loginServiceProvider = async (req, res) => {
   }
 };
 
+const updateServiceProvider = async (req, res) => {
+  try {
+    const { id } = req.provider;
+    const updateData = {};
+
+    const allowedUpdates = [
+      "username",
+      "city",
+      "phoneNumber",
+      "photoUrl",
+      "birthDate",
+      "isAvailable",
+    ];
+
+    allowedUpdates.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        if (field === "birthDate") {
+          updateData[field] = new Date(req.body[field]);
+        } else {
+          updateData[field] = req.body[field];
+        }
+      }
+    });
+
+    const updatedProvider = await prisma.serviceProvider.update({
+      where: { id },
+      data: updateData,
+    });
+
+    const providerResponse = {
+      ...updatedProvider,
+      password: undefined,
+      certification: undefined,
+      identityCard: undefined,
+    };
+
+    res.status(200).json(providerResponse);
+  } catch (error) {
+    console.error("Error updating service provider:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+const getProviderProfile = async (req, res) => {
+  try {
+    const { id } = req.provider;
+
+    const provider = await prisma.serviceProvider.findUnique({
+      where: { id },
+      include: {
+        services: true,
+        reviews: true,
+        bookings: true,
+        schedule: true,
+      },
+    });
+
+    if (!provider) {
+      return res.status(404).send("Provider not found");
+    }
+
+    const providerResponse = {
+      ...provider,
+      password: undefined,
+      certification: undefined,
+      identityCard: undefined,
+    };
+
+    res.status(200).json(providerResponse);
+  } catch (error) {
+    console.error("Error fetching provider profile:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+const getProviderServices = async (req, res) => {
+  try {
+    const { id } = req.provider;
+
+    const services = await prisma.service.findMany({
+      where: { providerId: id },
+      include: {
+        category: true,
+      },
+    });
+
+    res.status(200).json(services);
+  } catch (error) {
+    console.error("Error fetching provider services:", error);
+    res.status(500).send("Server error");
+  }
+};
+
 module.exports = {
   createNewServiceProvider,
   loginServiceProvider,
+  updateServiceProvider,
+  getProviderProfile,
+  getProviderServices,
 };
-// this file its clear

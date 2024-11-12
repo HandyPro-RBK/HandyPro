@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 const authorizeUser = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
+
     if (!token) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -43,21 +44,16 @@ const authorizeUser = async (req, res, next) => {
       return next();
     }
 
+    if (req.path.includes("/dashboard/summary")) {
+      return next();
+    }
+
     if (req.path.includes("/bookings")) {
       return next();
     }
 
-    const isAccessingOwnResource = req.params.userId === user.id.toString();
-    if (!isAccessingOwnResource) {
-      return res.status(403).json({
-        error: "Access denied",
-        code: "ACCESS_DENIED",
-      });
-    }
-
     next();
   } catch (error) {
-    console.error("Authorization error:", error);
     return res.status(500).json({
       error: "Internal server error",
       code: "INTERNAL_ERROR",
