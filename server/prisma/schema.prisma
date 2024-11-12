@@ -30,10 +30,12 @@ model User {
   phoneNumber       String            @db.VarChar(15)
   photoUrl          String            @db.VarChar(1024)
 
-  
+      isBanned      Boolean        @default(false)
+
   reviews           Review[]
   bookings          Booking[]
   notifications     Notification[]
+  Conversation Conversation[]
 }
 model ServiceProvider {
   id                Int               @id @default(autoincrement())
@@ -41,20 +43,22 @@ model ServiceProvider {
   email             String            @unique @db.VarChar(255)
   password          String            @db.VarChar(255)
   username          String            @db.VarChar(50)
-  certification     Bytes?
-  identityCard      Bytes?
+  certification     String?
+  identityCard      String?
   photoUrl          String?           @db.VarChar(1024)
   city              City              @default(TUNIS)
   phoneNumber       String?           @db.VarChar(15)
   birthDate         DateTime?
   rating            Decimal?          @default(0.0) @db.Decimal(3, 2)
-  isAvailable       Boolean           @default(true)
-  
+  isAvailable       Boolean           @default(false)
+    isBanned      Boolean        @default(false)
+
   services          Service[]
   reviews           Review[]          @relation("ProviderReviews")
   bookings          Booking[]
   schedule          Schedule[]
   notifications     Notification[]
+  Conversation Conversation[]
 }
 
 enum City {
@@ -180,6 +184,26 @@ model Notification {
 
   user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   provider          ServiceProvider?  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  providerId  Int
+  provider    ServiceProvider    @relation(fields: [providerId], references: [id])
+  UserId Int
+  User      User      @relation(fields: [UserId], references: [id])
+  messages  Message[]
+
+  @@unique([ providerId, UserId])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  content        String
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId Int
+  sender         String
+   isRead         Boolean      @default(false)
 }
 
 enum UserRole {
