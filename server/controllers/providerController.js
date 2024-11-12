@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cloudinary = require("../config/cloudinaryConfig");
+
 const Joi = require("joi");
 
 const prisma = new PrismaClient();
@@ -18,10 +20,36 @@ const validateProviderRegistration = (data) => {
       }),
     certification: Joi.string().optional(),
     identityCard: Joi.string().optional(),
-    address: Joi.string().max(255).required(),
+    city: Joi.string()
+      .valid(
+        "TUNIS",
+        "SFAX",
+        "SOUSSE",
+        "KAIROUAN",
+        "BIZERTE",
+        "GABES",
+        "ARIANA",
+        "GAFSA",
+        "MONASTIR",
+        "BEN_AROUS",
+        "KASSERINE",
+        "MEDENINE",
+        "NABEUL",
+        "TATAOUINE",
+        "BEJA",
+        "JENDOUBA",
+        "MAHDIA",
+        "SILIANA",
+        "KEF",
+        "TOZEUR",
+        "MANOUBA",
+        "ZAGHOUAN",
+        "KEBILI"
+      )
+      .required(),
     phoneNumber: Joi.string().max(15).required(),
     photoUrl: Joi.string().max(1024).optional(),
-    age: Joi.string().optional(),
+    birthDate: Joi.date().iso().required(),
   });
   return schema.validate(data);
 };
@@ -45,10 +73,10 @@ const createNewServiceProvider = async (req, res) => {
       password,
       certification,
       identityCard,
-      address,
+      city,
       phoneNumber,
       photoUrl,
-      age,
+      birthDate,
     } = req.body;
 
     const existingProvider = await prisma.serviceProvider.findUnique({
@@ -59,6 +87,32 @@ const createNewServiceProvider = async (req, res) => {
       return res.status(400).send("Email already in use");
     }
 
+    // Upload certification to Cloudinary
+    let certificationUrl = "";
+    if (certification) {
+      const certificationResult = await cloudinary.uploader.upload(
+        certification,
+        {
+          folder: "certifications",
+          upload_preset: "ml_default",
+        }
+      );
+      certificationUrl = certificationResult.secure_url;
+    }
+
+    // Upload identity card to Cloudinary
+    let identityCardUrl = "";
+    if (identityCard) {
+      const identityCardResult = await cloudinary.uploader.upload(
+        identityCard,
+        {
+          folder: "identity-cards",
+          upload_preset: "ml_default",
+        }
+      );
+      identityCardUrl = identityCardResult.secure_url;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newProvider = await prisma.serviceProvider.create({
@@ -66,15 +120,13 @@ const createNewServiceProvider = async (req, res) => {
         username,
         email,
         password: hashedPassword,
-        certification: certification
-          ? Buffer.from(certification, "base64")
-          : null,
-        identityCard: identityCard ? Buffer.from(identityCard, "base64") : null,
-        address,
+        certification: certificationUrl,
+        identityCard: identityCardUrl,
+        city,
         phoneNumber,
         photoUrl: photoUrl || null,
-        age,
-        isAvailable: false, // Default to false until verified
+        birthDate: new Date(birthDate),
+        isAvailable: true,
         rating: 0.0,
       },
     });
@@ -106,11 +158,11 @@ const createNewServiceProvider = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
-
 const loginServiceProvider = async (req, res) => {
   try {
     const { error } = validateProviderLogin(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    if (error)
+      return res.status(400).json({ message: error.details[0].message });
 
     const { email, password } = req.body;
 
@@ -119,12 +171,17 @@ const loginServiceProvider = async (req, res) => {
     });
 
     if (!provider) {
-      return res.status(400).send("Invalid email or password");
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    // Check if provider is banned
+    if (provider.isBanned) {
+      return res.status(403).json({ message: "Account Banned" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, provider.password);
     if (!isPasswordValid) {
-      return res.status(400).send("Invalid email or password");
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const token = jwt.sign(
@@ -145,13 +202,106 @@ const loginServiceProvider = async (req, res) => {
       identityCard: undefined,
     };
 
-    res.status(200).send({
+    res.status(200).json({
       user: "provider",
       provider: providerResponse,
       token,
     });
   } catch (err) {
     console.error("Error logging in service provider:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const updateServiceProvider = async (req, res) => {
+  try {
+    const { id } = req.provider;
+    const updateData = {};
+
+    const allowedUpdates = [
+      "username",
+      "city",
+      "phoneNumber",
+      "photoUrl",
+      "birthDate",
+      "isAvailable",
+    ];
+
+    allowedUpdates.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        if (field === "birthDate") {
+          updateData[field] = new Date(req.body[field]);
+        } else {
+          updateData[field] = req.body[field];
+        }
+      }
+    });
+
+    const updatedProvider = await prisma.serviceProvider.update({
+      where: { id },
+      data: updateData,
+    });
+
+    const providerResponse = {
+      ...updatedProvider,
+      password: undefined,
+      certification: undefined,
+      identityCard: undefined,
+    };
+
+    res.status(200).json(providerResponse);
+  } catch (error) {
+    console.error("Error updating service provider:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+const getProviderProfile = async (req, res) => {
+  try {
+    const { id } = req.provider;
+
+    const provider = await prisma.serviceProvider.findUnique({
+      where: { id },
+      include: {
+        services: true,
+        reviews: true,
+        bookings: true,
+        schedule: true,
+      },
+    });
+
+    if (!provider) {
+      return res.status(404).send("Provider not found");
+    }
+
+    const providerResponse = {
+      ...provider,
+      password: undefined,
+      certification: undefined,
+      identityCard: undefined,
+    };
+
+    res.status(200).json(providerResponse);
+  } catch (error) {
+    console.error("Error fetching provider profile:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+const getProviderServices = async (req, res) => {
+  try {
+    const { id } = req.provider;
+
+    const services = await prisma.service.findMany({
+      where: { providerId: id },
+      include: {
+        category: true,
+      },
+    });
+
+    res.status(200).json(services);
+  } catch (error) {
+    console.error("Error fetching provider services:", error);
     res.status(500).send("Server error");
   }
 };
@@ -159,4 +309,7 @@ const loginServiceProvider = async (req, res) => {
 module.exports = {
   createNewServiceProvider,
   loginServiceProvider,
+  updateServiceProvider,
+  getProviderProfile,
+  getProviderServices,
 };
