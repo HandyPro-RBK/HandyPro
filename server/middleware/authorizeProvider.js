@@ -16,12 +16,9 @@ const authorizeProvider = async (req, res, next) => {
       });
     }
 
-    // Verify token
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "your_secret_key"
-    );
-    console.log("Decoded Token:", decoded);
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_secret_key");
+       
 
     // Check if provider exists
     const provider = await prisma.serviceProvider.findUnique({
@@ -35,21 +32,22 @@ const authorizeProvider = async (req, res, next) => {
       });
     }
 
-    // Add provider to request
-    req.provider = provider;
-    req.providerId = provider.id;
-    console.log("Provider authorized:", provider.id);
+        // Add provider to request
+        req.provider = provider;
+        req.providerId = provider.id;
+       
 
-    next();
-  } catch (error) {
-    console.error("Authorization error:", error);
+        next();
 
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        message: "Token expired",
-      });
-    }
+    } catch (error) {
+       
+        
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({
+                success: false,
+                message: 'Token expired'
+            });
+        }
 
     if (error.name === "JsonWebTokenError") {
       return res.status(401).json({
