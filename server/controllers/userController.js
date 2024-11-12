@@ -88,21 +88,45 @@ const createNewUser = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
-
 // Login a user
 const loginUser = async (req, res) => {
   try {
     const { error } = validateLogin(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    if (error)
+      return res.status(400).json({
+        status: "error",
+        code: "VALIDATION_ERROR",
+        message: error.details[0].message,
+      });
 
     const { email, password } = req.body;
 
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(400).send("Invalid email or password");
+    if (!user)
+      return res.status(400).json({
+        status: "error",
+        code: "INVALID_CREDENTIALS",
+        message: "Email or password is incorrect",
+      });
+
+    // Check if user is banned
+    if (user.isBanned) {
+      return res.status(403).json({
+        status: "error",
+        code: "ACCOUNT_BANNED",
+        message:
+          "Your account has been banned. Please contact support for assistance.",
+      });
+    }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
-      return res.status(400).send("Invalid email or password");
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        status: "error",
+        code: "INVALID_CREDENTIALS",
+        message: "Email or password is incorrect",
+      });
+    }
 
     const token = jwt.sign(
       { id: user.id, email: user.email, userType: user.userType },
@@ -110,10 +134,18 @@ const loginUser = async (req, res) => {
       { expiresIn: "7h" }
     );
 
-    res.status(200).send({ token });
+    res.status(200).json({
+      status: "success",
+      token,
+      message: "Login successful",
+    });
   } catch (err) {
     console.error("Error logging in:", err);
-    res.status(500).send(err);
+    res.status(500).json({
+      status: "error",
+      code: "SERVER_ERROR",
+      message: "An error occurred while processing your request",
+    });
   }
 };
 
@@ -200,7 +232,7 @@ const deleteUser = async (req, res) => {
   try {
     const userId = req.params.userId;
     await prisma.user.delete({ where: { id: parseInt(userId) } });
-    res.status(204).send(); 
+    res.status(204).send();
   } catch (err) {
     if (err.code === "P2025") {
       return res.status(404).send("User not found");
