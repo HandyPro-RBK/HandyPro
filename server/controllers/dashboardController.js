@@ -69,7 +69,7 @@ const getBookingDetails = async (req, res) => {
             phoneNumber: true,
             photoUrl: true,
             rating: true,
-            address: true,
+            city: true,
           },
         },
         payments: true,
