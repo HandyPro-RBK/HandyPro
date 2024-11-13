@@ -197,7 +197,7 @@ const loginServiceProvider = async (req, res) => {
       identityCard: undefined,
     };
 
-    res.status(200).send({
+    res.status(200).json({
       user: "provider",
       provider: providerResponse,
       token,
