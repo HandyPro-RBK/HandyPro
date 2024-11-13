@@ -5,22 +5,42 @@
 // const path = require("path");
 // const prisma = new PrismaClient();
 
-// const customerNames = [
-//   "Aziz",
-//   "Hedi",
-//   "Sami",
-//   "Tarek",
-//   "Wassim",
-//   "Mariem",
-//   "Asma",
-//   "Rania",
-//   "Zeyneb",
-//   "Dorra",
-// ];
+// const customerImagesMap = {
+//   Aziz: "src/assets/images/Aziz.png",
+//   Dorra: "src/assets/images/Dorra.png",
+//   Zeyneb: "src/assets/images/Zeyneb.png",
+//   Asma: "src/assets/images/Asma.png",
+//   Mariem: "src/assets/images/Mariem.png",
+//   Tarek: "src/assets/images/Tarek.png",
+//   Sami: "src/assets/images/Sami.png",
+//   Hedi: "src/assets/images/Hedi.png",
+//   Molka: "src/assets/images/Molka.png",
+//   Rania: "src/assets/images/Rania.png",
+// };
+
+// const customerNames = Object.keys(customerImagesMap);
 
 // const providersByCity = {
 //   SOUSSE: ["Karim", "Slim", "Anis", "Mehdi", "Bilel", "Hatem", "Rami"],
 //   MONASTIR: ["Riadh", "Ridha", "Amine", "Maher", "Hichem", "Sofien", "Nabil"],
+// };
+
+// const providerImagesMap = {
+//   Amine: "src/assets/images/amine.jpg",
+//   Anis: "src/assets/images/anis.jpg",
+//   Bilel: "src/assets/images/bilel.jpg",
+//   Hatem: "src/assets/images/hatem.jpg",
+//   Hichem: "src/assets/images/hichem.jpg",
+//   Karim: "src/assets/images/karim.jpg",
+//   Maher: "src/assets/images/maher.jpg",
+//   Mehdi: "src/assets/images/mehdi.jpg",
+//   Nabil: "src/assets/images/nabil.jpg",
+//   Rami: "src/assets/images/rami.jpg",
+//   Riadh: "src/assets/images/riadh.jpg",
+//   Ridha: "src/assets/images/ridha.jpg",
+//   Sami: "src/assets/images/Sami.png",
+//   Slim: "src/assets/images/slim.jpg",
+//   Sofien: "src/assets/images/sofien.png",
 // };
 
 // const cities = [
@@ -370,10 +390,78 @@
 //   "Would definitely use their services again.",
 // ];
 
+// async function uploadToCloudinary(imagePath) {
+//   try {
+//     const result = await cloudinary.uploader.upload(imagePath, {
+//       folder: "images",
+//     });
+//     return result.secure_url;
+//   } catch (error) {
+//     console.error("Error uploading to Cloudinary:", error);
+//     return null;
+//   }
+// }
+
+// async function createServiceWithReviewsAndBookings(
+//   serviceTemplate,
+//   provider,
+//   categoryId,
+//   users
+// ) {
+//   const priceVariation = 0.9 + Math.random() * 0.2;
+//   const createdService = await prisma.service.create({
+//     data: {
+//       name: serviceTemplate.title,
+//       description: serviceTemplate.description,
+//       price: serviceTemplate.price * priceVariation,
+//       duration: serviceTemplate.duration,
+//       image: serviceTemplate.image,
+//       categoryId: categoryId,
+//       providerId: provider.id,
+//       isActive: true,
+//     },
+//   });
+
+//   const numReviews = 3 + Math.floor(Math.random() * 5);
+//   const shuffledUsers = [...users].sort(() => Math.random() - 0.5);
+
+//   for (let j = 0; j < numReviews; j++) {
+//     await prisma.review.create({
+//       data: {
+//         serviceId: createdService.id,
+//         userId: shuffledUsers[j].id,
+//         providerId: provider.id,
+//         rating: Math.floor(Math.random() * 2) + 4,
+//         comment:
+//           reviewComments[Math.floor(Math.random() * reviewComments.length)],
+//       },
+//     });
+//   }
+
+//   const numBookings = 1 + Math.floor(Math.random() * 3);
+//   for (let k = 0; k < numBookings; k++) {
+//     const futureDate = new Date();
+//     futureDate.setDate(futureDate.getDate() + Math.floor(Math.random() * 30));
+
+//     await prisma.booking.create({
+//       data: {
+//         userId: shuffledUsers[k].id,
+//         serviceId: createdService.id,
+//         providerId: provider.id,
+//         bookingDate: futureDate,
+//         status: ["PENDING", "CONFIRMED", "COMPLETED"][
+//           Math.floor(Math.random() * 3)
+//         ],
+//         totalPrice: serviceTemplate.price * priceVariation,
+//         notes: "Regular service booking",
+//       },
+//     });
+//   }
+// }
+
 // async function main() {
 //   console.log("Starting seeding...");
 
-//   // Upload images and update services array with Cloudinary URLs
 //   console.log("Uploading images to Cloudinary...");
 //   for (let service of services) {
 //     try {
@@ -382,35 +470,71 @@
 //     } catch (error) {
 //       console.error(`Error uploading image for ${service.title}:`, error);
 //       service.image =
-//         "https://res.cloudinary.com/djgq4duh7/image/upload/v1/home-services/default-service"; // default image URL
+//         "https://res.cloudinary.com/djgq4duh7/image/upload/v1/home-services/default-service";
 //     }
 //   }
 
-//   // Create customers
 //   console.log("Creating sample users...");
 //   const users = [];
 //   for (let i = 0; i < customerNames.length; i++) {
-//     const user = await prisma.user.upsert({
-//       where: { email: `${customerNames[i].toLowerCase()}@example.com` },
-//       update: {},
-//       create: {
-//         email: `${customerNames[i].toLowerCase()}@example.com`,
-//         password: await bcrypt.hash("password123", 10),
-//         username: customerNames[i].toLowerCase(),
-//         userType: "CUSTOMER",
-//         address: `${i + 1} Customer Street`,
-//         phoneNumber: `+216${Math.floor(10000000 + Math.random() * 90000000)}`,
-//         photoUrl: `${customerNames[i].toLowerCase()}.jpg`,
-//       },
-//     });
-//     users.push(user);
+//     const imagePath = `src/assets/images/${customerNames[i]}.png`;
+//     try {
+//       const cloudinaryUrl = await uploadToCloudinary(imagePath);
+//       const user = await prisma.user.upsert({
+//         where: { email: `${customerNames[i].toLowerCase()}@example.com` },
+//         update: {},
+//         create: {
+//           email: `${customerNames[i].toLowerCase()}@example.com`,
+//           password: await bcrypt.hash("password123", 10),
+//           username: customerNames[i].toLowerCase(),
+//           userType: "CUSTOMER",
+//           address: `${i + 1} Customer Street`,
+//           phoneNumber: `+216${Math.floor(10000000 + Math.random() * 90000000)}`,
+//           photoUrl: cloudinaryUrl || `${customerNames[i].toLowerCase()}.jpg`,
+//         },
+//       });
+//       users.push(user);
+//     } catch (error) {
+//       console.error(
+//         `Error uploading image for user ${customerNames[i]}:`,
+//         error
+//       );
+//       const user = await prisma.user.upsert({
+//         where: { email: `${customerNames[i].toLowerCase()}@example.com` },
+//         update: {},
+//         create: {
+//           email: `${customerNames[i].toLowerCase()}@example.com`,
+//           password: await bcrypt.hash("password123", 10),
+//           username: customerNames[i].toLowerCase(),
+//           userType: "CUSTOMER",
+//           address: `${i + 1} Customer Street`,
+//           phoneNumber: `+216${Math.floor(10000000 + Math.random() * 90000000)}`,
+//           photoUrl:
+//             "https://res.cloudinary.com/djgq4duh7/image/upload/v1/home-services/default-user",
+//         },
+//       });
+//       users.push(user);
+//     }
 //   }
 
-//   // Create service providers by city
 //   console.log("Creating service providers...");
 //   const serviceProviders = [];
 //   for (const [city, providers] of Object.entries(providersByCity)) {
 //     for (const providerName of providers) {
+//       let photoUrl;
+//       if (providerImagesMap[providerName]) {
+//         try {
+//           photoUrl = await uploadToCloudinary(providerImagesMap[providerName]);
+//         } catch (error) {
+//           console.error(
+//             `Error uploading image for provider ${providerName}:`,
+//             error
+//           );
+//           photoUrl =
+//             "https://res.cloudinary.com/djgq4duh7/image/upload/v1/home-services/default-provider";
+//         }
+//       }
+
 //       const serviceProvider = await prisma.serviceProvider.upsert({
 //         where: { email: `${providerName.toLowerCase()}@provider.com` },
 //         update: {},
@@ -418,7 +542,9 @@
 //           email: `${providerName.toLowerCase()}@provider.com`,
 //           password: await bcrypt.hash("password123", 10),
 //           username: providerName.toLowerCase(),
-//           photoUrl: `provider${serviceProviders.length + 1}.jpg`,
+//           photoUrl:
+//             photoUrl ||
+//             "https://res.cloudinary.com/djgq4duh7/image/upload/v1/home-services/default-provider",
 //           phoneNumber: `+216${Math.floor(10000000 + Math.random() * 90000000)}`,
 //           birthDate: new Date(
 //             1980 + Math.floor(Math.random() * 20),
@@ -432,7 +558,6 @@
 //       });
 //       serviceProviders.push(serviceProvider);
 
-//       // Create schedule for each provider
 //       for (let day = 0; day < 7; day++) {
 //         await prisma.schedule.create({
 //           data: {
@@ -459,11 +584,10 @@
 //     }
 //   }
 
-//   // Create categories with Cloudinary URLs
 //   console.log("Creating categories...");
 //   for (const category of categoryPills) {
 //     const defaultCategoryImage =
-//       "https://res.cloudinary.com/djgq4duh7/image/upload/v1/home-services/default-category"; // default category image URL
+//       "https://res.cloudinary.com/djgq4duh7/image/upload/v1/home-services/default-category";
 //     await prisma.category.upsert({
 //       where: { name: category.name },
 //       update: {},
@@ -475,12 +599,10 @@
 //     });
 //   }
 
-//   // Create services with city-specific distribution
 //   console.log("Creating services...");
 //   const categories = await prisma.category.findMany();
 //   const categoryMap = new Map(categories.map((cat) => [cat.name, cat.id]));
 
-//   // Group services by category
 //   const servicesByCategory = {};
 //   services.forEach((service) => {
 //     if (!servicesByCategory[service.category]) {
@@ -520,65 +642,6 @@
 //   }
 
 //   console.log("Seeding completed successfully!");
-// }
-
-// async function createServiceWithReviewsAndBookings(
-//   serviceTemplate,
-//   provider,
-//   categoryId,
-//   users
-// ) {
-//   const priceVariation = 0.9 + Math.random() * 0.2;
-//   const createdService = await prisma.service.create({
-//     data: {
-//       name: serviceTemplate.title,
-//       description: serviceTemplate.description,
-//       price: serviceTemplate.price * priceVariation,
-//       duration: serviceTemplate.duration,
-//       image: serviceTemplate.image,
-//       categoryId: categoryId,
-//       providerId: provider.id,
-//       isActive: true,
-//     },
-//   });
-
-//   // Create reviews
-//   const numReviews = 3 + Math.floor(Math.random() * 5);
-//   const shuffledUsers = [...users].sort(() => Math.random() - 0.5);
-
-//   for (let j = 0; j < numReviews; j++) {
-//     await prisma.review.create({
-//       data: {
-//         serviceId: createdService.id,
-//         userId: shuffledUsers[j].id,
-//         providerId: provider.id,
-//         rating: Math.floor(Math.random() * 2) + 4,
-//         comment:
-//           reviewComments[Math.floor(Math.random() * reviewComments.length)],
-//       },
-//     });
-//   }
-
-//   // Create bookings
-//   const numBookings = 1 + Math.floor(Math.random() * 3);
-//   for (let k = 0; k < numBookings; k++) {
-//     const futureDate = new Date();
-//     futureDate.setDate(futureDate.getDate() + Math.floor(Math.random() * 30));
-
-//     await prisma.booking.create({
-//       data: {
-//         userId: shuffledUsers[k].id,
-//         serviceId: createdService.id,
-//         providerId: provider.id,
-//         bookingDate: futureDate,
-//         status: ["PENDING", "CONFIRMED", "COMPLETED"][
-//           Math.floor(Math.random() * 3)
-//         ],
-//         totalPrice: serviceTemplate.price * priceVariation,
-//         notes: "Regular service booking",
-//       },
-//     });
-//   }
 // }
 
 // main()

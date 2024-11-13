@@ -242,10 +242,51 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const updateProfilePhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        status: "error",
+        message: "No file uploaded",
+      });
+    }
+
+    const userId = req.params.userId;
+    const photoUrl = `/uploads/profiles/${req.file.filename}`;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: { photoUrl },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        address: true,
+        phoneNumber: true,
+        photoUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: updatedUser,
+    });
+  } catch (err) {
+    console.error("Error updating profile photo:", err);
+    res.status(500).json({
+      status: "error",
+      message: "Server error",
+    });
+  }
+};
+
 module.exports = {
   createNewUser,
   loginUser,
   getUserProfile,
   updateUser,
   deleteUser,
+  updateProfilePhoto,
 };
