@@ -31,8 +31,7 @@ model User {
   photoUrl          String            @db.VarChar(1024)
   isBanned      Boolean        @default(false)
 
-      isBanned      Boolean        @default(false)
-
+  
   reviews           Review[]
   bookings          Booking[]
   notifications     Notification[]
@@ -52,9 +51,8 @@ model ServiceProvider {
   birthDate         DateTime?
   rating            Decimal?          @default(0.0) @db.Decimal(3, 2)
   isAvailable       Boolean           @default(false)
-  isBanned          Boolean        @default(false)
-
-
+  isBanned      Boolean        @default(false)
+  
   services          Service[]
   reviews           Review[]          @relation("ProviderReviews")
   bookings          Booking[]
