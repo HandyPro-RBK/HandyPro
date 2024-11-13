@@ -295,7 +295,6 @@ exports.validProvider = async (req, res) => {
   }
 };
 // Add other user-related controller functions here
-//test
 
 const cloudinary = require("../../config/cloudinaryConfig");
 
