@@ -203,7 +203,7 @@ const loginServiceProvider = async (req, res) => {
     };
 
     res.status(200).json({
-      user: 'provider',
+      user: "provider",
       provider: providerResponse,
       token,
     });
