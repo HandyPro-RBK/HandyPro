@@ -53,7 +53,7 @@ const prisma = new PrismaClient();
 
 // Routes
 app.use("/api/conversations", conversationRoutes);
-app.use("/user", userRouter);
+app.use("/api/user", userRouter); // Adjust to match expected API path
 app.use("/service", authorizeProvider, serviceRouter);
 app.use("/api/my-categories", myCategoryRoutes);
 app.use("/api/my-services", myServiceRoutes);
