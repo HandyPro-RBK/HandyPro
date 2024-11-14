@@ -47,7 +47,8 @@ const serviceProviderRouter = require("./routes/providerRoutes");
 const userRoutesAdmin = require("./routes/routesAdmin/userRoutes");
 const serviceRoutesAdmin = require("./routes/routesAdmin/serviceRoutes");
 const analyticsRoutesAdmuin = require("./routes/routesAdmin/analyticsRoutes");
-
+const paymentRoutes = require("./routes/paymentRoutes"); // Add this line
+const salesRoutes = require("./routes/salesRoutes");
 // Initialize Prisma
 const prisma = new PrismaClient();
 
@@ -64,6 +65,8 @@ app.use("/api/dashboard", dashboardRouter);
 app.use("/users", userRoutesAdmin);
 app.use("/services", serviceRoutesAdmin);
 app.use("/stats", analyticsRoutesAdmuin);
+app.use("/api", paymentRoutes); // Add this line
+app.use("/api/provider", salesRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
