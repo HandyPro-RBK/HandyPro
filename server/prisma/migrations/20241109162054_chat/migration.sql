@@ -1,7 +1,4 @@
 -- CreateEnum
-CREATE TYPE "City" AS ENUM ('TUNIS', 'SFAX', 'SOUSSE', 'KAIROUAN', 'BIZERTE', 'GABES', 'ARIANA', 'GAFSA', 'MONASTIR', 'BEN_AROUS', 'KASSERINE', 'MEDENINE', 'NABEUL', 'TATAOUINE', 'BEJA', 'JENDOUBA', 'MAHDIA', 'SILIANA', 'KEF', 'TOZEUR', 'MANOUBA', 'ZAGHOUAN', 'KEBILI');
-
--- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('CUSTOMER', 'ADMIN', 'PROVIDER');
 
 -- CreateEnum
@@ -38,9 +35,9 @@ CREATE TABLE "ServiceProvider" (
     "certification" BYTEA,
     "identityCard" BYTEA,
     "photoUrl" VARCHAR(1024),
-    "city" "City" NOT NULL DEFAULT 'TUNIS',
+    "address" VARCHAR(255),
     "phoneNumber" VARCHAR(15),
-    "birthDate" TIMESTAMP(3),
+    "age" TEXT,
     "rating" DECIMAL(3,2) DEFAULT 0.0,
     "isAvailable" BOOLEAN NOT NULL DEFAULT true,
 
@@ -142,6 +139,26 @@ CREATE TABLE "Notification" (
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Conversation" (
+    "id" SERIAL NOT NULL,
+    "providerId" INTEGER NOT NULL,
+    "UserId" INTEGER NOT NULL,
+
+    CONSTRAINT "Conversation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Message" (
+    "id" SERIAL NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "conversationId" INTEGER NOT NULL,
+    "sender" TEXT NOT NULL,
+
+    CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -153,6 +170,9 @@ CREATE UNIQUE INDEX "ServiceProvider_email_key" ON "ServiceProvider"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Conversation_providerId_UserId_key" ON "Conversation"("providerId", "UserId");
 
 -- AddForeignKey
 ALTER TABLE "Service" ADD CONSTRAINT "Service_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "ServiceProvider"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -189,3 +209,12 @@ ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "ServiceProvider"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "ServiceProvider"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_UserId_fkey" FOREIGN KEY ("UserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Message" ADD CONSTRAINT "Message_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

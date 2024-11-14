@@ -2,32 +2,29 @@ const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
-const conversationRoutes = require('./routes/conversations');
-const userRouter = require("./routes/userRoutes");
-const serviceRouter = require("./routes/serviceRoutes");
-const myCategoryRoutes = require("./routes/myCategoryRoutes");
-const myServiceRoutes = require("./routes/myServiceRoutes");
-const providerRoutes = require("./routes/bookingprovider");
-const dashboardRouter = require("./routes/dashboardRoutes");
-const servicedRoutes = require("./routes/postDetailRoutes");
-const serviceProviderRouter = require("./routes/providerRoutes");
-
-const { PrismaClient } = require("@prisma/client");
 const bodyParser = require("body-parser");
+const { PrismaClient } = require("@prisma/client");
 const authorizeProvider = require("./middleware/authorizeProvider");
+require("dotenv").config();
 
+// Initialize Express app
 const app = express();
+
+// Serve static files
+app.use("/uploads", express.static("uploads"));
+
+// Create HTTP server
 const server = createServer(app);
 
-// Fix 1: Correct CORS configuration for Socket.IO
+// Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Remove trailing slash
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
-    credentials: true
+    credentials: true,
   },
   pingTimeout: 60000,
-  pingInterval: 25000
+  pingInterval: 25000,
 });
 
 // Middleware
@@ -36,15 +33,27 @@ app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-require("dotenv").config();
+
+// Import routes
+const conversationRoutes = require("./routes/conversations");
+const userRouter = require("./routes/userRoutes");
+const serviceRouter = require("./routes/serviceRoutes");
+const myCategoryRoutes = require("./routes/myCategoryRoutes");
+const myServiceRoutes = require("./routes/myServiceRoutes");
+const providerRoutes = require("./routes/bookingprovider");
+const dashboardRouter = require("./routes/dashboardRoutes");
+const servicedRoutes = require("./routes/postDetailRoutes");
+const serviceProviderRouter = require("./routes/providerRoutes");
+const userRoutesAdmin = require("./routes/routesAdmin/userRoutes");
+const serviceRoutesAdmin = require("./routes/routesAdmin/serviceRoutes");
+const analyticsRoutesAdmuin = require("./routes/routesAdmin/analyticsRoutes");
+
+// Initialize Prisma
+const prisma = new PrismaClient();
 
 // Routes
-app.use('/api/conversations', conversationRoutes);
-// Environment variables
-require("dotenv").config();
-
-// Routes
-app.use("/user", userRouter);
+app.use("/api/conversations", conversationRoutes);
+app.use("/api/user", userRouter); // Adjust to match expected API path
 app.use("/service", authorizeProvider, serviceRouter);
 app.use("/api/my-categories", myCategoryRoutes);
 app.use("/api/my-services", myServiceRoutes);
@@ -52,12 +61,6 @@ app.use("/service-provider", serviceProviderRouter);
 app.use("/provider", authorizeProvider, providerRoutes);
 app.use("/serviceDetail", authorizeProvider, servicedRoutes);
 app.use("/api/dashboard", dashboardRouter);
-const prisma = new PrismaClient();
-//admin
-const userRoutesAdmin = require("./routes/routesAdmin/userRoutes");
-const serviceRoutesAdmin = require("./routes/routesAdmin/serviceRoutes");
-const analyticsRoutesAdmuin = require("./routes/routesAdmin/analyticsRoutes");
-
 app.use("/users", userRoutesAdmin);
 app.use("/services", serviceRoutesAdmin);
 app.use("/stats", analyticsRoutesAdmuin);
@@ -68,14 +71,12 @@ app.use((err, req, res, next) => {
   res.status(500).send("Something broke!");
 });
 
-
-// Initialize socket controller
+// Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log("New client connected");
 
   socket.on("joinConversation", (conversationId) => {
-    // Leave previous rooms if any
-    Object.keys(socket.rooms).forEach(room => {
+    Object.keys(socket.rooms).forEach((room) => {
       if (room !== socket.id) {
         socket.leave(room);
       }
@@ -91,18 +92,18 @@ io.on("connection", (socket) => {
           conversationId: message.conversationId,
           sender: message.sender,
           content: message.content,
-          createdAt: new Date(message.createdAt)
-        }
+          createdAt: new Date(message.createdAt),
+        },
       });
-      
+
       io.to(message.conversationId).emit("newMessage", savedMessage);
     } catch (error) {
       console.error("Error saving message:", error);
       socket.emit("messageError", { message: "Failed to save message" });
     }
   });
+
   socket.on("messagesRead", (data) => {
-    // Émettre l'événement pour mettre à jour tous les clients connectés
     io.emit("messagesRead", data);
   });
 
@@ -111,9 +112,7 @@ io.on("connection", (socket) => {
   });
 });
 
-
-
-
+// Start server
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
