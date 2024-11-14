@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
+const cloudinary = require("../config/cloudinaryConfig"); // Import Cloudinary configuration
 
 const prisma = new PrismaClient();
 
@@ -251,9 +252,17 @@ const updateProfilePhoto = async (req, res) => {
       });
     }
 
-    const userId = req.params.userId;
-    const photoUrl = `/uploads/profiles/${req.file.filename}`;
+    // Upload the image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "user_profile_photos", // Optional: Set a folder for user photos
+    });
 
+    // Retrieve Cloudinary URL
+    const photoUrl = result.secure_url;
+
+    const userId = req.params.userId;
+
+    // Update the user's profile with the new photo URL
     const updatedUser = await prisma.user.update({
       where: { id: parseInt(userId) },
       data: { photoUrl },
@@ -269,10 +278,15 @@ const updateProfilePhoto = async (req, res) => {
       },
     });
 
+    // Return the updated user profile with the new photo URL
     res.status(200).json({
       status: "success",
       data: updatedUser,
     });
+
+    // Optionally, remove the local file after upload to Cloudinary
+    const fs = require("fs");
+    fs.unlinkSync(req.file.path); // Delete the local file
   } catch (err) {
     console.error("Error updating profile photo:", err);
     res.status(500).json({
