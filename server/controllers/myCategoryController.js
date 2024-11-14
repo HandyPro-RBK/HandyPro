@@ -1,14 +1,12 @@
-// myCategoryController.js
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// Modified fetchCategories to include top-rated service for each category
+// Fetch all categories with their services
 const fetchCategories = async (req, res) => {
   try {
     const categories = await prisma.category.findMany({
       include: {
         services: {
-          distinct: ["name"],
           include: {
             provider: {
               select: {
@@ -21,52 +19,43 @@ const fetchCategories = async (req, res) => {
               },
             },
           },
-          orderBy: {
-            provider: {
-              rating: "desc",
-            },
-          },
         },
       },
     });
 
-    // Process the data to keep only the top-rated provider's service for each unique service name
-    const processedCategories = categories.map((category) => ({
-      ...category,
-      services: Object.values(
-        category.services.reduce((acc, service) => {
-          if (
-            !acc[service.name] ||
-            (service.provider.rating || 0) >
-              (acc[service.name].provider.rating || 0)
-          ) {
-            acc[service.name] = service;
-          }
-          return acc;
-        }, {})
-      ),
-    }));
-
-    res.json(processedCategories);
+    res.json(categories);
   } catch (error) {
     console.error("Error fetching categories:", error);
     res.status(500).json({ error: "Failed to fetch categories" });
   }
 };
 
-// Modified fetchProvidersByFilters to show only top-rated provider per service
+// Fetch all providers with pagination
 const fetchProvidersByFilters = async (req, res) => {
   try {
-    const { categoryId, city } = req.query;
+    const { categoryId, city, page = 1, limit = 10 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const services = await prisma.service.findMany({
-      where: {
-        categoryId: categoryId ? parseInt(categoryId) : undefined,
-        provider: {
-          city: city || undefined,
-          isActive: true,
-        },
+    // Construct the where clause for filtering
+    const where = {
+      provider: {
+        isActive: true,
       },
+    };
+
+    if (categoryId) {
+      where.categoryId = parseInt(categoryId);
+    }
+    if (city) {
+      where.provider.city = city;
+    }
+
+    // Get total count for pagination
+    const totalCount = await prisma.service.count({ where });
+
+    // Fetch services with pagination
+    const services = await prisma.service.findMany({
+      where,
       include: {
         provider: {
           select: {
@@ -80,28 +69,19 @@ const fetchProvidersByFilters = async (req, res) => {
         },
         category: true,
       },
-      orderBy: {
-        provider: {
-          rating: "desc",
-        },
-      },
+      skip,
+      take: parseInt(limit),
     });
 
-    // Group services by name and keep only the top-rated provider's service
-    const uniqueServices = Object.values(
-      services.reduce((acc, service) => {
-        if (
-          !acc[service.name] ||
-          (service.provider.rating || 0) >
-            (acc[service.name].provider.rating || 0)
-        ) {
-          acc[service.name] = service;
-        }
-        return acc;
-      }, {})
-    );
-
-    res.json(uniqueServices);
+    res.json({
+      services,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+      },
+    });
   } catch (error) {
     console.error("Error fetching providers:", error);
     res.status(500).json({ error: "Failed to fetch providers" });
