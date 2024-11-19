@@ -186,8 +186,56 @@ const createBooking = async (req, res) => {
   }
 };
 
+// Fetch all reviews for a service
+const fetchServiceReviews = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const reviews = await prisma.review.findMany({
+      where: { serviceId: parseInt(id) },
+      include: {
+        user: { select: { id: true, username: true, photoUrl: true } },
+        provider: { select: { id: true, username: true, photoUrl: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(reviews);
+  } catch (error) {
+    console.error("Error fetching service reviews:", error);
+    res.status(500).json({ error: "Failed to fetch reviews" });
+  }
+};
+
+// Create a new review
+const createReview = async (req, res) => {
+  try {
+    const { serviceId, providerId, rating, comment } = req.body;
+    const userId = req.user.id;
+
+    const review = await prisma.review.create({
+      data: {
+        rating,
+        comment,
+        userId,
+        serviceId,
+        providerId,
+      },
+      include: {
+        user: { select: { id: true, username: true, photoUrl: true } },
+        provider: { select: { id: true, username: true, photoUrl: true } },
+      },
+    });
+
+    res.status(201).json(review);
+  } catch (error) {
+    console.error("Error creating review:", error);
+    res.status(500).json({ error: "Failed to create review" });
+  }
+};
+
 module.exports = {
   fetchAllServices,
   fetchServiceDetails,
   createBooking,
+  fetchServiceReviews,
+  createReview,
 };
