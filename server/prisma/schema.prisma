@@ -58,7 +58,7 @@ model ServiceProvider {
   bookings          Booking[]
   schedule          Schedule[]
   notifications     Notification[]
-  Conversation Conversation[]
+  Conversation      Conversation[]
 }
 
 enum City {
